@@ -1,11 +1,14 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Get fisher enrichments of DMPs per chromatin state and tissue for aging effects by sex
+# @software version: R=4.2.2
 
-# library(minfi)
-# library(lumi)
 library(dplyr)
 library(tidyr)
 library(tidyverse)
 ## Input data #####
-#library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
+
 
 first_dir <- "/gpfs/projects/bsc83/"
 annotation <- read.csv("/gpfs/projects/bsc83/Projects/GTEx_v8/Methylation/Data/GPL21145_MethylationEPIC_15073387_v-1-0_processed.csv")
@@ -17,16 +20,19 @@ names <- c("Age")
 traits_to_use <- c('AGE')
 
 results_DML <- list()
-# for(tissue in tissues){ 
-#   print(tissue)
-#   if (tissue %in% c('Prostate','Testis')) {
-#     results_DML[[tissue]] <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_5_PEERs_continous.rds"))
-#   } else if (tissue != 'Ovary') {
-#     results_DML[[tissue]] <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_5_PEERs_continous.peer.AgeMale.rds"))
-# 
-#   }
-# }
-# 
+
+## male
+for(tissue in tissues){
+  print(tissue)
+  if (tissue %in% c('Prostate','Testis')) {
+    results_DML[[tissue]] <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_5_PEERs_continous.rds"))
+  } else if (tissue != 'Ovary') {
+    results_DML[[tissue]] <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_5_PEERs_continous.peer.AgeMale.rds"))
+
+  }
+}
+
+## female
 for(tissue in tissues){
   print(tissue)
   if (tissue %in% c('Ovary')) {
@@ -44,10 +50,6 @@ chromhmm <- lapply(names_chrom, function(tis)
   read.delim(files[grep(tis, files)], sep='\t', header=F))
 names(chromhmm) <- tissues
 
-### overlap chromhmm and cpgs tested #### 
-# ann_granges <- annotation[!is.na(annotation$MAPINFO),] %>%
-#   dplyr::select(chrom=CHR, start=MAPINFO, end=MAPINFO, name=IlmnID) %>% distinct() %>% 
-#   makeGRangesFromDataFrame(keep.extra.columns=T)
 ann_bed <- annotation[!is.na(annotation$MAPINFO) & !is.na(annotation$CHR),] %>%
   dplyr::select(chrom=CHR, start=MAPINFO, end=MAPINFO, name=IlmnID) %>% distinct()
 ann_bed$chrom <- paste0('chr',ann_bed$chrom)
@@ -62,10 +64,6 @@ chromhmm_cpgs <- lapply(tissues, function(tis) {
 names(chromhmm_cpgs) <- tissues
 
 #### enrichment -- chi-squared first ####
-### read sharing ####
-# sharing <- readRDS('/gpfs/projects/bsc83/Projects/GTEx_v8/Methylation/Data/Sharing_DMP.rds')
-# shared_cpgs <- readRDS('/gpfs/projects/bsc83/Projects/GTEx_v8/Methylation/Data/chromHMM_shared_9tissues.rds')
-
 #From 18 states to 14
 
 # enrichment of DSE in particular types of AS events
@@ -89,9 +87,9 @@ my_fisher <- function(type, tissue, trait){
   
   type_df <- chrom_tissue[chrom_tissue$region_chromhmm_new == type & chrom_tissue$name_ann %in% rownames(res),]
   other_type <- chrom_tissue[chrom_tissue$region_chromhmm_new != type & chrom_tissue$name_ann %in% rownames(res),]
-  type_diff <- nrow(type_df[type_df$name_ann %in% rownames(res[res$adj.P.Val<0.05 & res$logFC<0,]),])
+  type_diff <- nrow(type_df[type_df$name_ann %in% rownames(res[res$adj.P.Val<0.05 & res$logFC<0,]),]) # change for hyper
   type_notdiff <- nrow(type_df) - type_diff
-  other_type_diff <- nrow(other_type[other_type$name_ann %in% rownames(res[res$adj.P.Val<0.05 & res$logFC<0,]),])
+  other_type_diff <- nrow(other_type[other_type$name_ann %in% rownames(res[res$adj.P.Val<0.05 & res$logFC<0,]),]) # change for hyper
   other_type_notdiff <- nrow(other_type) - other_type_diff
   
   ### test significance
