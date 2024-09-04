@@ -17,8 +17,7 @@ print(Sys.time())
 #-------------- #
 
 tissues <- list.dirs("Tissues/", full.names = F)[-1]
-# tissues <- tissues[tissues!="KidneyCortex"]
-# tissues <- tissues[33:length(tissues)]
+
 # Filenames ####
 TissueInfoFile <- "Tissue_info.rds"
 TissueInfo <- readRDS(paste0(gtex_path,TissueInfoFile))
@@ -49,86 +48,76 @@ for (tissue in tissues) {
 }
 
 ### merging all data together ####
-# beta_df <- do.call("cbind",lapply(tissues, function(tissue) beta[[tissue]]))
-# 
-# probes <- rownames(beta_df)
-# beta <- sapply(beta_df, as.numeric)
-# rownames(beta) <- probes
-# 
-# ## select most variable ####
-# cv <- apply(beta, 1, var)
-# summary(cv)
-# 
-# ## Select 10% of most var
-# cutoff <- 1
-# summary(cv[rank(cv) / length(cv) > 1 - cutoff])
-# 
-# meth_variable <- beta[rank(cv) / length(cv) > 1 - cutoff, ]
-# dim(meth_variable)
-# 
-# #M_vals <- log2(meth_variable/(1-meth_variable))
-# 
-# #par(mfrow=c(1,1))
-# 
-# # tsne <- Rtsne(t(meth_variable),#
-# #               dims = 2, perplexity=30, verbose=TRUE, max_iter = 1000,partial_pca = T)
-# # pdf( paste0('Plots/', "tSNE.Methylationprofile.coloured_by_tissue.50var.pdf"),
-# #      width = 7.5,
-# #      height = 7.5)
-# # par(mfrow=c(1,1))
-# # plot(tsne$Y, main="Expression profiles",pch=16,
-# #      col=alpha( tissues_cols[sapply(colnames(meth_variable), function(sample) unlist(strsplit(sample,split = ":"))[[2]] )],0.5),cex=0.75,
-# #      xlab = "t-SNE1",ylab="t-SNE2")
-# # dev.off()
-# library(ggpubr)
-# library(RColorBrewer)
-# library(viridis)
-# library(gridExtra)
-# #library(FactoMineR)
-# #library(factoextra)
-# 
-# # Merge with sample metadata --
-# meth_variable <- as.data.frame(t(meth_variable))
-# # n <- dim(meth_variable)[2]
-# # meth_variable$SUBJID <- rownames(meth_variable)
-# # meth_variable <- cbind.data.frame(meth_variable, metadata_df[meth_variable$SUBJID,1:3])
-# # Run PCA --
-# #res.pca <- PCA(exprs.data, ncp = 100, graph = F, quali.sup = c((n+1):ncol(meth_variable)) )
-# 
-# pca_res <- prcomp((meth_variable), scale. = TRUE)
-# # Results for individuals --
-# res.ind <- pca_res$x
-# pca <- as.data.frame(res.ind[,1:2])
-# #pca$SUBJID <- rownames(pca)
-# #pca <- merge(pca, metadata_df, by = "SUBJID")
-# 
-# svg( paste0('Plots/', "PCA.Methylationprofile.coloured_by_tissue.all.svg"),
+beta_df <- do.call("cbind",lapply(tissues, function(tissue) beta[[tissue]]))
+
+probes <- rownames(beta_df)
+beta <- sapply(beta_df, as.numeric)
+rownames(beta) <- probes
+
+## select most variable ####
+cv <- apply(beta, 1, var)
+summary(cv)
+
+## Select 10% of most var
+cutoff <- 1
+summary(cv[rank(cv) / length(cv) > 1 - cutoff])
+
+meth_variable <- beta[rank(cv) / length(cv) > 1 - cutoff, ]
+dim(meth_variable)
+
+##### Perform T-SNE #######
+# tsne <- Rtsne(t(meth_variable),#
+#               dims = 2, perplexity=30, verbose=TRUE, max_iter = 1000,partial_pca = T)
+# pdf( paste0('Plots/', "tSNE.Methylationprofile.coloured_by_tissue.50var.pdf"),
 #      width = 7.5,
 #      height = 7.5)
 # par(mfrow=c(1,1))
-# plot(pca, main="methylation profiles",pch=16,
-#      col=alpha( tissues_cols[sapply(rownames(meth_variable), function(sample) unlist(strsplit(sample,split = ":"))[[2]] )],0.5),cex=0.75,
-#      xlab = "PCA1",ylab="PCA2")
+# plot(tsne$Y, main="Expression profiles",pch=16,
+#      col=alpha( tissues_cols[sapply(colnames(meth_variable), function(sample) unlist(strsplit(sample,split = ":"))[[2]] )],0.5),cex=0.75,
+#      xlab = "t-SNE1",ylab="t-SNE2")
 # dev.off()
-# 
-# # saveRDS(pca,'PCA_first2.rds')
-# 
-# ### do hierarchical clustering ####
-# M_vals <- log2(meth_variable/(1-meth_variable))
-# M_vals_scaled <- scale((meth_variable))
-# dist_mat <- dist(M_vals_scaled, method = 'euclidean')
-# 
-# hclust_avg <- hclust(dist_mat, method = 'average')
-# clusterCut <- cutree(hclust_avg, 9)
-# #table(clusterCut, metadata_df$tissue)
-# library(rafalib)
-# pdf( paste0('Plots/', "hierarchicalClustrer.all.pdf"),
-#      width = 15,
-#      height = 7.5)
-# par(mfrow=c(1,1))
-# myplclust(hclust_avg, lab = sapply(rownames(meth_variable), function(sample) unlist(strsplit(sample,split = ":"))[[1]] ), 
-#           lab.col = tissues_cols[sapply(rownames(meth_variable), function(sample) unlist(strsplit(sample,split = ":"))[[2]] )])
-# dev.off()
+
+##### Perform PCA ######
+library(ggpubr)
+library(RColorBrewer)
+library(viridis)
+library(gridExtra)
+
+# Merge with sample metadata --
+meth_variable <- as.data.frame(t(meth_variable))
+
+pca_res <- prcomp((meth_variable), scale. = TRUE)
+# Results for individuals --
+res.ind <- pca_res$x
+pca <- as.data.frame(res.ind[,1:2])
+
+svg( paste0('Plots/', "PCA.Methylationprofile.coloured_by_tissue.all.svg"),
+     width = 7.5,
+     height = 7.5)
+par(mfrow=c(1,1))
+plot(pca, main="methylation profiles",pch=16,
+     col=alpha( tissues_cols[sapply(rownames(meth_variable), function(sample) unlist(strsplit(sample,split = ":"))[[2]] )],0.5),cex=0.75,
+     xlab = "PCA1",ylab="PCA2")
+dev.off()
+
+# saveRDS(pca,'PCA_first2.rds')
+
+### do hierarchical clustering ####
+M_vals <- log2(meth_variable/(1-meth_variable))
+M_vals_scaled <- scale((meth_variable))
+dist_mat <- dist(M_vals_scaled, method = 'euclidean')
+
+hclust_avg <- hclust(dist_mat, method = 'average')
+clusterCut <- cutree(hclust_avg, 9)
+#table(clusterCut, metadata_df$tissue)
+library(rafalib)
+pdf( paste0('Plots/', "hierarchicalClustrer.all.pdf"),
+     width = 15,
+     height = 7.5)
+par(mfrow=c(1,1))
+myplclust(hclust_avg, lab = sapply(rownames(meth_variable), function(sample) unlist(strsplit(sample,split = ":"))[[1]] ),
+          lab.col = tissues_cols[sapply(rownames(meth_variable), function(sample) unlist(strsplit(sample,split = ":"))[[2]] )])
+dev.off()
 
 ### plot methylation levels ####
 beta_df <- list()
