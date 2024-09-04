@@ -1,7 +1,9 @@
 # 2024_GTEx_Methylation
 Companion Github Repo for the paper "The impact of sex, age, and genetic ancestry on DNA methylation across tissues"
 
-Main developer: @WinonaOliveros @JMiguelRamirez
+Main developer: 
+[@WinonaOliveros](https://github.com/WinonaOliveros) 
+[@JMiguelRamirez](https://github.com/JMiguelRamirez) 
 
 This repository contains all of the analysis performed in this paper.
 
