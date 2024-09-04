@@ -1,0 +1,2 @@
+name term GeneRatio FDR trait tissue dir Genes
+GO:0007140 male meiotic nuclear division 0.2307692 0.0221365 SEX2 ColonTransverse Hypermethylated SYCP2,M1AP,ASZ1,MEIOC,HSPA2,TEX14,RAD51C,DMRTC2,FIGNL1,BRCA2,MEIKIN,UBB,MAEL

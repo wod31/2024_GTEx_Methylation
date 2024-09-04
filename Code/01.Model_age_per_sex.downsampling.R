@@ -30,22 +30,9 @@ print("Reading Admixture results")
 admixture_ancestry <- read.table('/gpfs/scratch/bsc83/MN4/bsc83/bsc83535/GTEx/v8/genotype_data/admixture_inferred_ancestry.txt')
 colnames(admixture_ancestry) <- c('SUBJID','AFRv1','EURv1','inferred_ancestry','AFRv2','EURv2')
 metadata <- merge(metadata, admixture_ancestry[,c("SUBJID","EURv1")], by='SUBJID')
-#### only run with categorical ancestry
-# metadata$Ancestry <- as.factor(metadata$Ancestry)
-# if(sum(metadata$Ancestry=="AMR")<5){
-#   print("Not enough AMRs")
-#   metadata <- metadata[metadata$Ancestry!="AMR",]
-#   beta <- beta[,metadata$SUBJID]
-# }
-# 
+
 print("Filtering Sex")
 
-# metadata_female <- metadata[metadata$SEX == 2,-which(names(metadata) == "SEX")]
-# metadata_male <- metadata[metadata$SEX == 1,-which(names(metadata) == "SEX")]
-
-### match number of samples #####
-# n = min(nrow(metadata_male), nrow(metadata_female))
-## i do breast flipped because females have more samples
 if (tissue == 'BreastMammaryTissue') {
   metadata$SEX[metadata$sex == 2] <- 0
   metadata$SEX[metadata$sex == 1] <- 1

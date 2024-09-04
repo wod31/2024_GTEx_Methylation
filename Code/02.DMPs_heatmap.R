@@ -4,19 +4,14 @@ suppressPackageStartupMessages(library(ComplexHeatmap))
 library(RColorBrewer)
 suppressPackageStartupMessages(library(circlize))
 
-first_dir <- "~/Documents/mn4/"
 first_dir <- "~/marenostrum/"
 
-project_path <- paste0(first_dir, "/projects/bsc83/Projects/GTEx_v8/Methylation/")
 project_path <- paste0(first_dir, "Projects/GTEx_v8/Methylation/")
 
 tissues <- c("Lung", "ColonTransverse", "Ovary", "Prostate", "BreastMammaryTissue", "KidneyCortex", "Testis", "WholeBlood", "MuscleSkeletal")
 names <- c("Age", "Ancestry", "BMI", "Sex")
-# names <- c("Age", "Ancestry", "Sex")
 data <- matrix(nrow = length(tissues), ncol=4, dimnames = list(tissues, names))
-# data <- matrix(nrow = length(tissues), ncol=3, dimnames = list(tissues, names))
 
-tissue_info <- readRDS(paste0(first_dir, "/projects/bsc83/Projects/GTEx_v8/Jose/00_Data/Tissue_info_whole.rds"))
 tissue_info <- readRDS(paste0(first_dir, "Projects/GTEx_v8/Methylation/Data/Tissue_info_whole.rds"))
 
 tissue_info <- tissue_info[!grepl("BreastMammaryTissue_", tissue_info$tissue_ID),]
@@ -26,12 +21,7 @@ tissue_info$name <- gsub("- ", "", tissue_info$tissue_name)
 n_samples <- c()
 for(tissue in tissues){ 
   print(tissue)
-  # model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results.rds"))
   model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_5_PEERs_continous.rds"))
-  # model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_batch.rds"))
-  # model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_batch_5_PEERs.rds"))
-  # model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_no_BMI.rds"))
-  # model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DMR_results_5_PEERs.rds")) #Jose used the wrong name to the file DMR instead of DML
   data[tissue, "Age"] <- sum(model$AGE$adj.P.Val<0.05)
   if(TRUE %in% grepl("EURv1",names(model))){
     data[tissue, "Ancestry"] <- sum(model$EURv1$adj.P.Val<0.05)
@@ -55,7 +45,6 @@ my_pretty_num_function <- function(n){
 }
 
 data <- data[,c("Ancestry", "Sex", "Age", "BMI")]
-# data <- data[,c("Ancestry", "Sex", "Age")]
 create_heatmap <- function(data, tissue_info, size=12){ #It takes as input the whole data frame, the whole information on tissues, the subset of tissues and  diseases to be plotted, and the font size
   #data, tissue_info, tissues_plot = rownames(data), diseases_plot = colnames(data), size=12
   without_NA <- replace(data, is.na(data), "")
@@ -132,13 +121,6 @@ final_table$logFC <- as.numeric(final_table$logFC)
 logfc <- ddply(final_table, .(probe, trait), summarise, logFC=mean(logFC))
 
 
-nrow(counts[counts$number>1,])
-nrow(counts[counts$number>2,])
-nrow(counts[counts$number>3,])
-nrow(counts[counts$number>4,])
-nrow(counts[counts$number>5,])
-nrow(counts[counts$number>6,])
-
 counts <- counts[counts$number>=2,]
 
 to_plot <- merge(counts, logfc, by=c("probe", "trait"))
@@ -146,11 +128,3 @@ library(ggplot2)
 ggplot(to_plot) + geom_jitter(aes(trait, number, col=logFC), alpha=0.5) +
   scale_color_gradient2(low="red", mid="gray", high="blue") + theme_bw()
 
-nrow(to_plot[to_plot$trait=="AncestryEUR" & to_plot$logFC>0,])
-nrow(to_plot[to_plot$trait=="AncestryEUR" & to_plot$logFC<0,])
-
-nrow(to_plot[to_plot$trait=="SEX2" & to_plot$logFC>0,])
-nrow(to_plot[to_plot$trait=="SEX2" & to_plot$logFC<0,])
-
-nrow(to_plot[to_plot$trait=="AGE" & to_plot$logFC>0,])
-nrow(to_plot[to_plot$trait=="AGE" & to_plot$logFC<0,])

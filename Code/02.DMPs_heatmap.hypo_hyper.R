@@ -3,28 +3,21 @@ suppressPackageStartupMessages(library(ComplexHeatmap))
 library(RColorBrewer)
 suppressPackageStartupMessages(library(circlize))
 
-first_dir <- "~/Documents/mn4/"
 first_dir <- "~/marenostrum/"
 
-project_path <- paste0(first_dir, "/projects/bsc83/Projects/GTEx_v8/Methylation/")
 project_path <- paste0(first_dir, "Projects/GTEx_v8/Methylation/")
 
 tissues <- c("Lung", "ColonTransverse", "Ovary", "Prostate", "BreastMammaryTissue", "KidneyCortex", "Testis",  "WholeBlood","MuscleSkeletal")
 names <- c("Age", "Ancestry", "BMI", "Sex")
 data <- matrix(nrow = length(tissues), ncol=4, dimnames = list(tissues, names))
 
-tissue_info <- readRDS(paste0(first_dir, "/projects/bsc83/Projects/GTEx_v8/Methylation/Data/Tissue_info_whole.rds"))
 tissue_info <- readRDS(paste0(project_path, "Data/Tissue_info_whole.rds"))
 
-tissue_info <- tissue_info[!grepl("BreastMammaryTissue_", tissue_info$tissue_ID),]
 tissue_info <- tissue_info[tissue_info$tissue_ID %in% tissues,]
 
 n_samples <- c()
 for(tissue in tissues){ 
   print(tissue)
-  # model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results.rds"))
-  # model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_batch.rds"))
-  # model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_batch.rds"))
   model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_5_PEERs_continous.rds")) #Jose used the wrong name to the file DMR instead of DML
   data[tissue, "Age"] <- sum(model$AGE$P.Value<0.05)# & model$AGE$logFC<0)
   if(TRUE %in% grepl("EUR",names(model))){
@@ -51,9 +44,6 @@ my_pretty_num_function <- function(n){
 data_up <- matrix(nrow = length(tissues), ncol=4, dimnames = list(tissues, names))
 for(tissue in tissues){ 
   print(tissue)
-  # model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results.rds"))
-  # model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_batch.rds"))
-  # model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_batch.rds"))
   model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_5_PEERs_continous.rds")) #Jose used the wrong name to the file DMR instead of DML
   
   data_up[tissue, "Age"] <- sum(model$AGE$adj.P.Val<0.05 & model$AGE$logFC>0)
@@ -70,9 +60,6 @@ for(tissue in tissues){
 data_down <- matrix(nrow = length(tissues), ncol=4, dimnames = list(tissues, names))
 for(tissue in tissues){ 
   print(tissue)
-  # model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results.rds"))
-  # model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_batch.rds"))
-  # model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_batch.rds"))
   model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_5_PEERs_continous.rds")) #Jose used the wrong name to the file DMR instead of DML
   
   data_down[tissue, "Age"] <- sum(model$AGE$adj.P.Val<0.05 & model$AGE$logFC<0)
@@ -163,11 +150,10 @@ tissue_expression_variation_explained_df$label <- rownames(tissue_expression_var
 tissue_expression_variation_explained_df <- tissue_expression_variation_explained_df %>% separate(label, c("Tissue", "Direction","Trait"))
 colnames(tissue_expression_variation_explained_df) <- c('Prop',"Tissue", "Direction","Trait")
 
-## binomial
+## binomial testing ######
 binom_test <- function(trait,tissue) {
   print(tissue)
   print(trait)
-  #dea <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_batch_5_PEERs.rds"))
   if(tissue %in% sex_tissues){
     if (trait == 'Sex') {
       return(NA)
@@ -194,6 +180,7 @@ for (trait in names) {
   names(binom_res[[trait]]) <- tissues
 }
 
+### process binomial results to generate a table #####
 read_data <- function(variables, data, trait){ #Function to prepare data to plot and compute adjusted p value
 
   
@@ -201,15 +188,12 @@ read_data <- function(variables, data, trait){ #Function to prepare data to plot
   adj.P.Val <- p.adjust(sapply(variables, function(tissue) data[[trait]][[tissue]]$p.value), method = "BH")
   CI_down <- lapply(variables, function(tissue) data[[trait]][[tissue]]$conf.int[1])
   CI_up <- lapply(variables, function(tissue) data[[trait]][[tissue]]$conf.int[2])
-  #sample_size <- lapply(variables, function(tissue) data[[trait]][[tissue]][['m']])
-  
   
   names(odds_ratio) <- variables
   names(adj.P.Val) <- variables
   names(CI_down) <- variables
   names(CI_up) <- variables
-  #names(sample_size) <- variables
-  
+
   odds_ratio_df <- as.data.frame(unlist(odds_ratio))
   odds_ratio_df$label <- variables
   odds_ratio_df$type <- deparse(substitute(data)) #Either hypo or hyper
@@ -229,11 +213,6 @@ read_data <- function(variables, data, trait){ #Function to prepare data to plot
   CI_up_df$label <- variables
   CI_up_df$type <- deparse(substitute(data))
   colnames(CI_up_df) <- c('CI_up','tissue','type')
-  
-  # sample_size_df <- as.data.frame(unlist(sample_size))
-  # sample_size_df$label <- variables
-  # sample_size_df$type <- deparse(substitute(data))
-  # colnames(sample_size_df) <- c('sample_size','tissue','type')
   
   all <- Reduce(function(x, y) merge(x, y, all=TRUE), list(odds_ratio_df, adj.P.Val_df, CI_down_df, CI_up_df))
   head(all)
@@ -260,7 +239,7 @@ for (trait in c('Sex','Age','Ancestry')) {
 
 saveRDS(binom_all, '~/marenostrum/Projects/GTEx_v8/Methylation/Data/binomial_DMPs.rds')
 
-# bar plot
+#### bar plot hyper vs hypo #####
 library(ggh4x)
 traits_cols <- c('#C49122','#4B8C61','#70A0DF')
 names(traits_cols) <- c('Ancestry','Sex','Age')
@@ -270,7 +249,6 @@ tissue_expression_variation_explained_df <- tissue_expression_variation_explaine
 tissue_expression_variation_explained_df$Trait <- factor(tissue_expression_variation_explained_df$Trait, levels = c('Ancestry','Sex','Age'))
 tissue_expression_variation_explained_df$Tissue <- factor(tissue_expression_variation_explained_df$Tissue, 
                                                           levels = rev(tissues))
-#tissue_expression_variation_explained_df$Trait <- droplevels(tissue_expression_variation_explained_df$Trait)
 
 tissue_expression_variation_explained_df$label <- paste0(tissue_expression_variation_explained_df$Direction,
                                                          ':',tissue_expression_variation_explained_df$Trait)
@@ -287,7 +265,7 @@ ggplot(tissue_expression_variation_explained_df, aes(fill=label, y=Tissue, x=Pro
   facet_wrap2(~ Trait, strip = strip) + theme_bw() + scale_x_continuous(breaks=seq(0, 1, 0.5))
 dev.off()
 
-#####Tissue Sharing######
+##### Tissue Sharing ######
 final_table <- data.frame(cg="chr1",logFC=1, adj.P.Val=1, trait=1, tissue=1)
 for(trait in c("AGE", "EURv1", "BMI", "SEX2")){
   print(trait)
@@ -315,7 +293,6 @@ for(trait in c("AGE", "EURv1", "BMI", "SEX2")){
 final_table <- final_table[-1,]
 
 library(plyr) #Counting
-#final_table$name <- paste0(final_table$seqnames,':',final_table$start,';',final_table$end,';',final_table$overlapping.genes)
 counts <- ddply(final_table, .(cg, trait), nrow)
 names(counts) <- c("CG", "trait", "number")
 final_table$sign <- as.numeric(sign(final_table$logFC))
@@ -330,11 +307,6 @@ ggplot(to_plot) + geom_jitter(aes(trait, number, col=dir), alpha=0.5) +
   theme_bw() + geom_violin(aes(x = trait, y = number, fill=trait),alpha=0.8) +
   scale_fill_manual(values = c('#70A0DF','#C49122','#4B8C61'))
 
-table(to_plot$trait, to_plot$dir)
-table(to_plot$trait, to_plot$number)
-table(to_plot$trait, to_plot$dir, to_plot$number)
-
-View(to_plot[to_plot$number>=4,])
 
 ## binomial shared 
 # sex 
@@ -342,14 +314,14 @@ binom <- binom.test(nrow(to_plot[to_plot$number>=2 & to_plot$trait=='SEX2' & to_
 ## age
 binom <- binom.test(nrow(to_plot[to_plot$number>=3 & to_plot$trait=='AGE' & to_plot$dir==1,]), nrow(to_plot[to_plot$number>=3 & to_plot$trait=='AGE' & to_plot$dir %in% c(1,-1),]), 0.5)
 
-## plot ##
+#### plot tissue sharing ####
 to_plot$dir <- as.factor(to_plot$dir)
 pdf('~/marenostrum/Projects/GTEx_v8/Methylation/Plots/direction_sex_shared.pdf', width = 4, height = 1)
 ggplot(to_plot[to_plot$number>=2 & to_plot$trait=='SEX2',], aes(fill=dir, y=trait)) + 
   geom_bar(position="fill", stat="count")
 dev.off()
 
-##### Final plot ####
+##### Final plot tissue sharing ####
 head(to_plot)
 to_plot$number <- as.factor(to_plot$number)
 
@@ -433,8 +405,7 @@ to_plot$label <- 'No'
 to_plot$label[to_plot$number >= 5] <- 'Yes'
 
 library(ggrepel)
-#pdf('~/marenostrum/Projects/GTEx_v8/Methylation/Plots/tissue_sharing_sex_violin.pdf', width = 3, height = 3)
-#png('~/marenostrum/Projects/GTEx_v8/Methylation/Plots/tissue_sharing_ancestry_violin.png', width = 900, height = 700, res = 300)
+
 p <- (ggplot(to_plot[to_plot$trait=='SEX2',]) + geom_jitter(aes(type, number, col=type), alpha=0.5) +
   theme_bw() + #geom_violin(aes(x = type, y = number, fill=type),alpha=0.8) +
   geom_boxplot(aes(type, number),col = "black",
@@ -592,169 +563,6 @@ pdf(paste0(plot_path, "Figure_2E.tissue_sharing_examples.pdf"),
 ggarrange(p3, p4, ncol = 2)
 dev.off()
 
-##### XCI tissue sharing ####
-# oliva_et_al <- read.delim("~/Documents/Oliva_et_al.table_S3.txt")
-# XCI_genes <- oliva_et_al[oliva_et_al$Reported.Escapee.==1, "HUGO_gene_id"]
-# XCI_genes <- XCI_genes[XCI_genes %in% gene_annotation$ensembl.id] # # oliva et al. includie pseudoautosomal genes
-# xci_genes <- gene_annotation[gene_annotation$ensembl.id %in%  XCI_genes, "gene.name"]
-# xci_genes_highly_shared <- xci_genes[xci_genes %in% tissue_sharing$Sex[tissue_sharing$Sex$n_DE > 9, "gene_name"]]
-
-## map CGs to genes ###
-annotation <- read.csv("~/marenostrum_scratch/GTEx/v9/Oliva/GPL21145_MethylationEPIC_15073387_v-1-0_processed.csv")
-head(annotation)
-# library(org.Hs.eg.db)
-# library(AnnotationDbi)
-# genes <- mapIds(keys = gsub('\\..*','',XCI_genes),
-#   x = org.Hs.eg.db,
-#   "SYMBOL", 
-#   "ENSEMBL",
-#   multiVals = "first")
-
-to_plot_genes <- merge(to_plot, annotation[,c("Name","UCSC_RefGene_Name","CHR")], by.x = 'CG', by.y = 'Name')
-head(to_plot_genes)
-remove(annotation)
-
-to_plot_genes$XCI <- 'No'
-library(tidyr)
-library(dplyr)
-to_plot_genes <- to_plot_genes %>% separate_rows(UCSC_RefGene_Name, sep = ';')
-to_plot_genes <- to_plot_genes %>% distinct()
-
-to_plot_genes$XCI[to_plot_genes$UCSC_RefGene_Name %in% XCI_genes] <- 'XCI'
-table(to_plot_genes$XCI)
-
-### imprinted genes ####
-annotation <- read.csv("~/marenostrum_scratch/MN4/bsc83/bsc83535/GTEx/v9/Oliva/GPL21145_MethylationEPIC_15073387_v-1-0_processed.csv")
-head(annotation)
-
-to_plot <- readRDS('~/marenostrum/Projects/GTEx_v8/Methylation/Data/Sharing_DMP.rds')
-#to_plot_genes <- merge(to_plot, annotation[,c("Name","UCSC_RefGene_Name","CHR")], by.x = 'CG', by.y = 'Name')
-head(to_plot_genes)
-
-imprinted_genes <- read.delim('~/marenostrum/Projects/GTEx_v8/Methylation/Data/imprinted_genes.txt')
-
-to_plot_genes$imprinted <- 'No'
-library(tidyr)
-library(dplyr)
-to_plot_genes <- to_plot %>% separate_rows(UCSC_RefGene_Name, sep = ';')
-to_plot_genes <- to_plot_genes %>% distinct()
-
-to_plot_genes$imprinted[to_plot_genes$UCSC_RefGene_Name %in% imprinted_genes$Gene[imprinted_genes$Status=='Imprinted']] <- 'Imprinted'
-to_plot_genes$imprinted[to_plot_genes$UCSC_RefGene_Name %in% imprinted_genes$Gene[imprinted_genes$Status=='Predicted']] <- 'Predicted'
-
-
-table(to_plot_genes$imprinted)
-table(to_plot_genes$imprinted, to_plot_genes$trait)
-
-### per tissue analysis ####
-tissues <- c("MuscleSkeletal",'KidneyCortex',"BreastMammaryTissue","Lung", "ColonTransverse", "WholeBlood")
-names <- c('Sex')
-traits_to_use <- c('SEX2')
-
-results_DML <- lapply(tissues, function(tis) 
-  readRDS(paste0("~/marenostrum/Projects/GTEx_v8/Methylation/Tissues/",tis,"/DML_results_5_PEERs_continous.rds")))
-names(results_DML) <- tissues
-
-ann_bed <- annotation[!is.na(annotation$MAPINFO) & !is.na(annotation$CHR),] %>%
-  dplyr::select(chrom=CHR, start=MAPINFO, end=MAPINFO, name=IlmnID) %>% distinct()
-ann_bed$chrom <- paste0('chr',ann_bed$chrom)
-head(ann_bed)
-ann_bed$start <- ann_bed$start-1
-### read repeat ###
-
-annotation <- annotation %>% separate_rows(UCSC_RefGene_Name, sep = ';')
-annotation <- annotation %>% distinct()
-
-imprinted <- list()
-enrichment_imprinted <- list()
-#enrichment_families <- list()
-for (tissue in tissues) {
-  print(tissue)
-  res <- results_DML[[tissue]][['SEX2']]
-  res_df <- res[res$adj.P.Val<0.05,]
-  imprinted_genes_all <- annotation$IlmnID[annotation$UCSC_RefGene_Name %in% imprinted_genes$Gene[imprinted_genes$Status%in% c('Imprinted','Predicted')]]
-  
-  res_df$Type <- 'Other'
-  res_df$Type[rownames(res_df) %in% imprinted_genes_all] <-"Imprinted"
-  imprinted[[tissue]]<- as.data.frame(table(res_df$Type))
-  
-  for (dir in c('hyper','hypo')) {
-    if (dir == 'hyper') {
-      sig <- res_df[res_df$logFC>0,]
-    } else{
-      sig <- res_df[res_df$logFC<0,]
-    }
-    all <- rownames(res)
-    
-    common <- sig[rownames(sig) %in% imprinted_genes_all,]
-    
-    m <- matrix(c(nrow(common), nrow(sig[!rownames(sig) %in% imprinted_genes_all,]), 
-                  length(imprinted_genes_all[!imprinted_genes_all %in% rownames(sig)]), length(all[!all %in% c(rownames(sig),imprinted_genes_all)])), 2,2, byrow = T)
-    
-    m[is.na(m)] <- 0
-    print(dir)
-    print(m)
-    f <- fisher.test(m)
-    print(f)
-    enrichment_imprinted[[tissue]][[dir]] <- (list("f" = f, "m" = nrow(common)))
-  }
-  
-  
-}
-
-
-read_data <- function(variables, data, trait){ #Function to prepare data to plot and compute adjusted p value
-  
-  odds_ratio <- lapply(variables, function(type) data[[type]][[trait]][['f']]$estimate)
-  adj.P.Val <- p.adjust(sapply(variables, function(type) data[[type]][[trait]][['f']]$p.value), method = "BH")
-  CI_down <- lapply(variables, function(type) data[[type]][[trait]][['f']]$conf.int[1])
-  CI_up <- lapply(variables, function(type) data[[type]][[trait]][['f']]$conf.int[2])
-  sample_size <- lapply(variables, function(type) data[[type]][[trait]][['m']])
-  
-  
-  names(odds_ratio) <- variables
-  names(adj.P.Val) <- variables
-  names(CI_down) <- variables
-  names(CI_up) <- variables
-  names(sample_size) <- variables
-  
-  odds_ratio_df <- as.data.frame(unlist(odds_ratio))
-  odds_ratio_df$label <- variables
-  odds_ratio_df$type <- trait #Either hypo or hyper
-  colnames(odds_ratio_df) <- c('oddsRatio', 'region','type')
-  
-  adj.P.Val_df <- as.data.frame(unlist(adj.P.Val))
-  adj.P.Val_df$label <- variables
-  adj.P.Val_df$type <- trait
-  colnames(adj.P.Val_df) <- c('adjPvalue','region','type')
-  
-  CI_down_df <- as.data.frame(unlist(CI_down))
-  CI_down_df$label <- variables
-  CI_down_df$type <-trait
-  colnames(CI_down_df) <- c('CI_down','region','type')
-  
-  CI_up_df <- as.data.frame(unlist(CI_up))
-  CI_up_df$label <- variables
-  CI_up_df$type <-trait
-  colnames(CI_up_df) <- c('CI_up','region','type')
-  
-  sample_size_df <- as.data.frame(unlist(sample_size))
-  sample_size_df$label <- variables
-  sample_size_df$type <- trait
-  colnames(sample_size_df) <- c('sample_size','region','type')
-  
-  all <- Reduce(function(x, y) merge(x, y, all=TRUE), list(odds_ratio_df, adj.P.Val_df, CI_down_df, CI_up_df, sample_size_df))
-  head(all)
-  all$sig <- 'not Sig'
-  all$sig[all$adjPvalue<0.05] <- 'Sig'
-  all <- all[,c("region","oddsRatio","adjPvalue","CI_down","CI_up","sig","type", "sample_size")]
-  return(all)
-}
-
-hypo_d <- read_data(tissues, enrichment_imprinted, 'hypo')
-hyper_d <- read_data(tissues, enrichment_imprinted, 'hyper')
-
-hyper_hypo <- rbind(hypo_d, hyper_d)
 
 #### genes not concordant ####
 library(stringr)
@@ -764,6 +572,7 @@ genes_non_conc <- unique(unlist(str_split(genes, ";")))[2:640]
 write.table(genes_non_conc, '~/marenostrum/Projects/GTEx_v8/Methylation/genes_non_concordant_sharing_age_continous_anc.txt', sep = '\n', quote = F, 
             col.names = F, row.names = F)
 
+##### GO enrichment shared DMPs ######
 library(missMethyl)
 
 betas <- read.csv("~/marenostrum_scratch/GTEx/v9/Oliva/GPL21145_MethylationEPIC_15073387_v-1-0_processed.csv")$Name
@@ -772,20 +581,9 @@ res <- gometh(to_plot_genes$CG[to_plot_genes$trait=='AGE' & to_plot_genes$dir=='
 res <- res[res$ONTOLOGY=="BP",]
 print(table(res$FDR<0.05))
 
-topgo <- topGSA(res, n=20)
-(ggplot(data = topgo, aes(x=DE/N, y = factor(TERM, levels=rev(TERM)),
-                               color = -log10(FDR), size = DE)) +
-        geom_point() + scale_color_gradient(low = "red", high = "blue") +
-        theme_bw() +  ylab("") +  xlab("Gene Ratio") +
-        ggtitle(paste0(tissue,' ',trait," GO top all")))
 
-#### Enrichments ####
 library(stringr)
 genes <- to_plot_genes$UCSC_RefGene_Name[to_plot_genes$trait=='AGE' & to_plot_genes$number>=4]
-#genes_non_conc <- unique(unlist(str_split(genes, ";")))[2:640]
-
-write.table(genes_non_conc, '~/marenostrum/Projects/GTEx_v8/Methylation/genes_non_concordant_sharing_age.txt', sep = '\n', quote = F, 
-            col.names = F, row.names = F)
 
 library(missMethyl)
 
@@ -809,32 +607,3 @@ write.table(res[res$FDR<0.05,], '~/marenostrum/Projects/GTEx_v8/Methylation/Data
             sep = '\t', quote = F, 
             col.names = T, row.names = T)
 
-topgo <- topGSA(res, n=20)
-(ggplot(data = topgo[topgo$FDR<0.05,], aes(x=DE/N, y = factor(TERM, levels=rev(TERM)),
-                          color = -log10(FDR), size = DE)) +
-    geom_point() + scale_color_gradient(low = "red", high = "blue") +
-    theme_bw() +  ylab("") +  xlab("Gene Ratio") +
-    ggtitle(paste0('AGE Shared'," GO BP sig")))
-
-## enrichment DMPs individually variable 
-sharing <- readRDS('~/marenostrum/Projects/GTEx_v8/Methylation/Data/Sharing_DMP.rds')
-chuncks <- c(1:16)
-
-#### reading varPart values ####
-beta <- lapply(chuncks, function(chnk) readRDS(paste0('varPart/', chnk, "_chunck_var_part.rds")))
-beta_df <- do.call("rbind",beta)
-
-type_df <- sharing[sharing$trait == 'EURv1' & sharing$number>=4,]
-other_type <- sharing[sharing$trait == 'EURv1' & sharing$number<4,]
-type_diff <- nrow(type_df[type_df$CG %in% rownames(beta_df[beta_df$SUBJID>0.5,]),])
-type_notdiff <- nrow(type_df) - type_diff
-other_type_diff <- nrow(other_type[other_type$CG %in% rownames(beta_df[beta_df$SUBJID>0.5,]),])
-other_type_notdiff <- nrow(other_type) - other_type_diff
-
-### test significance
-m <- matrix(c(type_diff, type_notdiff, other_type_diff, other_type_notdiff), 2,2, byrow = T)
-print(m)  
-
-m[is.na(m)] <- 0
-f <- fisher.test(m)
-f
