@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Split methylation data
+# @software version: R=4.2.2
+
 #Creating path variables
 first_dir <- "/gpfs/" #I use first_dir in case I run something locally at some point
 data_path <- paste0(first_dir, "/scratch/bsc83/bsc83535/GTEx/")

@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Plot T-SNE of beta values + distribution of beta values per tissue
+# @software version: R=4.2.2
+
 options(stringsAsFactors = F)
 set.seed(1)
 

@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Plot heatmap with DMPs + tissue-sharing + direction of methylation change
+# @software version: R=4.2.2
+
 rm(list=ls())
 suppressPackageStartupMessages(library(ComplexHeatmap))
 library(RColorBrewer)

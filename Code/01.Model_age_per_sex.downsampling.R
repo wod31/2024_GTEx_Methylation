@@ -1,4 +1,8 @@
 #!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Model aging effects per sex downsampling to the minimum number of individuals per tissue
+# @software version: R=4.2.2
 
 # Parsing
 library(optparse)

@@ -1,11 +1,16 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Get fisher enrichments of DMPs per chromatin state and tissue
+# @software version: R=4.2.2
 
-# library(minfi)
-# library(lumi)
+
+###### Do enrichment of DMPs for each chromatin state per tissue and trait #####
+
 library(dplyr)
 library(tidyr)
 library(tidyverse)
-## Input data #####
-#library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
+
 
 first_dir <- "/gpfs/projects/bsc83/"
 annotation <- read.csv("/gpfs/projects/bsc83/Projects/GTEx_v8/Methylation/Data/GPL21145_MethylationEPIC_15073387_v-1-0_processed.csv")

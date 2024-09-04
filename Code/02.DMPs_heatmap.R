@@ -1,3 +1,10 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Plot heatmap with DMPs and tissue-sharing version 1
+# @software version: R=4.2.2
+
+
 #This code creates a heatmap to compare tissues and demographic traits
 rm(list=ls())
 suppressPackageStartupMessages(library(ComplexHeatmap))

@@ -1,4 +1,9 @@
 #### enrichments #####
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Get funtional enrichments of DMPs for GO pathways
+# @software version: R=4.2.2
 
 library(missMethyl)
 library(ggplot2)
