@@ -1,10 +1,13 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Plot fisher enrichments of DMPs per chromatin state and tissue; for sex-age specific DMPs
+# @software version: R=4.2.2
+
+
 #### plot chromhmm aging sex-specific ####
 
 read_data <- function(variables, data, type, trait){ #Function to prepare data to plot and compute adjusted p value
-  
-  # if (tissue %in% sex_tissues & trait == "SEX2") {
-  #   print(NA)
-  # } else {
   
   odds_ratio <- lapply(variables, function(tissue) data[[tissue]][[trait]][[type]][['f']]$estimate)
   adj.P.Val <- p.adjust(sapply(variables, function(tissue) data[[tissue]][[trait]][[type]][['f']]$p.value), method = "BH")
@@ -58,8 +61,6 @@ hyper <- readRDS('~/marenostrum/Projects/GTEx_v8/Methylation/Tissues/enrichment_
 
 colors_traits <- list('AGE'=c('#3D7CD0','#B4D6F6'))
 
-tissue_info <- readRDS(paste0('~/marenostrum/', "Projects/GTEx_v8/Methylation/Data//Tissue_info_whole.rds"))
-
 tissues <- c("Lung", "ColonTransverse", "Ovary", "Prostate", "BreastMammaryTissue", "KidneyCortex", "Testis", "WholeBlood","MuscleSkeletal")
 
 library(ggpubr)
@@ -95,12 +96,7 @@ for (type in c("Enh","EnhBiv","Het","Quies","ReprPC","TSS","TssBiv","Tx","ZNF/Rp
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
             panel.border = element_rect(colour = "black", linewidth=1)) #+
-    # scale_y_discrete(breaks=c("Enh","EnhBiv","Het","Quies","ReprPC","TSS","TssBiv","Tx","ZNF/Rpts"),
-    #                  labels=c("Enhancer","Enhancer Bivalent","Heterochromatin","Quiescent","Repressed Polycomb","TSS","TSS Bivalent","Transcription","ZNF & Repeats"))# + xlim(0, 3)
-    # pdf(file = paste0("~/marenostrum/Projects/GTEx_v8/Methylation/Plots/chromhmm/genomic_location_", gsub('\\/','_',type),'_',trait,".pdf"), w = 6, h = 3.5)
-    # print(g)
-    # dev.off()
-    
+
     #Plot sample sizes:
     
     g2 <- ggplot(hyper_hypo) + geom_col(aes(sample_size, tissue, fill=type), width = 0.6) +
@@ -111,12 +107,7 @@ for (type in c("Enh","EnhBiv","Het","Quies","ReprPC","TSS","TssBiv","Tx","ZNF/Rp
             axis.text.y=element_blank(),  #remove y axis labels,
             axis.title.x = element_text(size=16)) +
       scale_x_continuous(n.breaks=3)
-    #   scale_y_discrete(breaks=c("Enh","EnhBiv","Het","Quies","ReprPC","TSS","TssBiv","Tx","ZNF/Rpts"),
-    #                    labels=c("Enhancer","Enhancer Bivalent","Heterochromatin","Quiescent","Repressed Polycomb","TSS","TSS Bivalent","Transcription","ZNF & Repeats")) #+
-    # #scale_x_continuous(breaks=c(0, 20000, 40000)) #Only for lung
-    # pdf(file = paste0("~/marenostrum/Projects/GTEx_v8/Methylation/Plots/chromhmm/genomic_location_", gsub('\\/','_',type),'_',trait,"_sample_size.pdf"), w = 4, h = 3.5)
-    # print(g2)
-    # dev.off()
+
     
     p <- ggarrange(g, g2, labels = c("A", "B"),
                    common.legend = TRUE, legend = "right", widths = c(0.8,0.3))

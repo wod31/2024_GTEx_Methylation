@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Plot fisher enrichments of DMPs per chromatin state and tissue; for sex-age specific DMPs
+# @software version: R=4.2.2
+
 #### plot enrichments
 library(ggplot2)
 library(ggh4x)
