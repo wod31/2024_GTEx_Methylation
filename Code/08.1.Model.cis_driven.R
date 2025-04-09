@@ -1,4 +1,7 @@
 #!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Model cis-driven ancestry-DMPs
 
 # Parsing
 library(optparse)
@@ -24,17 +27,6 @@ print("Reading data")
 
 print("Reading metadata")
 metadata <- readRDS(paste0(project_path, 'Tissues/', tissue, "/metadata.rds"))
-# metadata$Ancestry <- as.factor(metadata$Ancestry)
-# if(sum(metadata$Ancestry=="AMR")<5){
-#   print("Not enough AMRs")
-#   metadata <- metadata[metadata$Ancestry!="AMR",]
-#   #beta <- beta[,metadata$SUBJID]
-# }
-# 
-# print("Filtering ASN")
-# metadata <- metadata[metadata$Ancestry!="ASN",]
-# metadata$Ancestry <- droplevels(metadata$Ancestry)
-# #beta <- beta[,colnames(beta) %in% metadata$SUBJID]
 
 print("Reading Admixture results")
 admixture_ancestry <- read.table(paste0(project_path,'Data/admixture_inferred_ancestry.txt'))
