@@ -1,6 +1,11 @@
 ###### Variance partition for demographical traits ######
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) #If using Rstudio
-# setwd("..")
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Run variance partition analysis on DNA methylation data per tissue on demographic traits
+# @software version: R=4.2.2
+
+
 first_dir <- "/gpfs/"
 setwd(paste0(first_dir, "/projects/bsc83/Projects/GTEx_v8/Methylation/"))
 
@@ -23,7 +28,7 @@ project_path <- paste0(first_dir, "/projects/bsc83/Projects/GTEx_v8/Methylation/
 
 print("Reading data")
 Sys.time()
-data <- readRDS(paste0(project_path,'Tissues/', tissue, "/data.rds")) #From whole compressed data in 5.6G to compressed 1.4G/1.1Gb only in Lung (the highest number of samples)
+data <- readRDS(paste0(project_path,'Tissues/', tissue, "/data.rds")) 
 Sys.time() #12 minutes to load 15 Gb
 beta <- data
 
@@ -40,10 +45,10 @@ if(length(levels(metadata$SEX))==1){
   print("Sexual tissue")
   metadata <- metadata[,-which(names(metadata) == "SEX")]
    individual_variables <- c("EURv1", "AGE", "BMI", "TRISCHD", "DTHHRDY")
-  # individual_variables <- c("EURv1", "AGE", "TRISCHD", "DTHHRDY")
+ 
 } else{
    individual_variables <- c("EURv1", "SEX", "AGE", "BMI", "TRISCHD", "DTHHRDY")
-  # individual_variables <- c("EURv1", "SEX", "AGE", "TRISCHD", "DTHHRDY")
+  
 }
 metadata$DTHHRDY <- as.factor(metadata$DTHHRDY)
 rownames(metadata) <- metadata$SUBJID
@@ -57,7 +62,7 @@ probes <- rownames(data)
 # Create M values
 data <- sapply(data, as.numeric)
 rownames(data) <- probes
-M <- log2(data/(1-data)) #-> most papers say M is better for differential although beta should be plotted for interpretation
+M <- log2(data/(1-data)) 
 
 print('Betas prepared')
 
@@ -79,21 +84,6 @@ if (tissue == 'Testis') {
 form <- paste0("~", paste0(colnames(metadata_2), collapse="+"))
 print(form)
 
-### run in chuncks
-# dfs <- split(as.data.frame(M), (seq(nrow(M))-1) %/% 50000) 
-# for (i in c(1:length(dfs))) {
-#   print('variance Partition') 
-#   print(paste0('chunck ',i))
-#   
-#   vp = fitExtractVarPartModel(as.matrix(dfs[[i]]), form, metadata_df)
-#   pl <- plotVarPart( sortCols(vp))
-#   
-#   saveRDS(vp, paste0(i,'_chunck_var_part.rds'))
-#   
-#   pdf(file = paste0("Plots/",i,"_chunckvar_part.pdf"), w = 6, h = 3.5)
-#   print(pl)
-#   dev.off()
-# }
 print('variance Partition')
 
 ### select only DMPs
@@ -103,11 +93,9 @@ dma_res <- readRDS(paste0("Tissues/", tissue, "/DML_results_5_PEERs_continous.rd
 traits <- names(dma_res)
 dm_cpgs <- unique(unlist(lapply(traits, function(trait) rownames(dma_res[[trait]][dma_res[[trait]][,"adj.P.Val"] < 0.05,]) ) ))
 
-#cpgs_assessed <- rownames(dma_res$AGE) #Rownames of any variable would work
 print(paste0("Computing var part for nº", length(dm_cpgs)))
 M <- M[dm_cpgs,]
 print(dim(M))
-
 
 vp = fitExtractVarPartModel(M, form, metadata_2)
 pl <- plotVarPart( sortCols(vp))

@@ -1,6 +1,10 @@
 ###### Variance partition for demographical traits ######
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) #If using Rstudio
-# setwd("..")
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Run variance partition analysis on gene expression data per tissue on demographic traits
+# @software version: R=4.2.2
+
 first_dir <- "/gpfs/"
 setwd(paste0(first_dir, "/projects/bsc83/Projects/GTEx_v8/Methylation/"))
 
@@ -23,9 +27,7 @@ project_path <- paste0(first_dir, "/projects/bsc83/Projects/GTEx_v8/Methylation/
 
 print("Reading data")
 Sys.time()
-data <- readRDS(paste0(project_path,'Tissues/', tissue, "/counts.rds")) #From whole compressed data in 5.6G to compressed 1.4G/1.1Gb only in Lung (the highest number of samples)
-Sys.time() #12 minutes to load 15 Gb
-#beta <- data
+data <- readRDS(paste0(project_path,'Tissues/', tissue, "/counts.rds")) 
 
 print("Reading metadata")
 metadata <- readRDS(paste0(project_path, 'Tissues/', tissue, "/metadata_expression.rds"))
@@ -44,10 +46,10 @@ if(length(levels(metadata$Sex))==1){
   print("Sexual tissue")
   metadata <- metadata[,-which(names(metadata) == "Sex")]
   individual_variables <- c("EURv1", "Age", "BMI", "IschemicTime", "HardyScale")
-  # individual_variables <- c("EURv1", "AGE", "TRISCHD", "DTHHRDY")
+
 } else{
   individual_variables <- c("EURv1", "Sex", "Age", "BMI", "IschemicTime", "HardyScale")
-  # individual_variables <- c("EURv1", "SEX", "AGE", "TRISCHD", "DTHHRDY")
+
 }
 
 metadata$HardyScale <- droplevels(metadata$HardyScale)
@@ -55,7 +57,6 @@ metadata$IschemicTime <- as.numeric(metadata$IschemicTime)
 
 ### performing linear model #### 
 
-#data <- data[,rownames(metadata)]
 colnames(data) <- sapply(colnames(data), function(id) paste0(strsplit(id, "-")[[1]][-3], collapse="-"))
 data <- data[,rownames(metadata)]
 print(ncol(metadata))
@@ -80,14 +81,8 @@ print(form)
 
 print('variance Partition')
 
-### select only DMPs
 print(paste0("Computing var part for ", tissue))
 
-#dma_res <- readRDS(paste0("Tissues/", tissue, "/DML_results_5_PEERs_continous.rds"))
-#traits <- names(dma_res)
-#dm_cpgs <- unique(unlist(lapply(traits, function(trait) rownames(dma_res[[trait]][dma_res[[trait]][,"adj.P.Val"] < 0.05,]) ) ))
-
-#cpgs_assessed <- rownames(dma_res$AGE) #Rownames of any variable would work
 print(paste0("Computing var part for nº", nrow(data)))
 print(dim(data))
 

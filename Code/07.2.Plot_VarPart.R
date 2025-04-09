@@ -1,4 +1,10 @@
 ##### plot hier.part results #####
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Plot variance partition results on DNA methylation data per tissue on demographic traits
+# @software version: R=4.2.2
+
 rm(list=ls())
 suppressPackageStartupMessages(library(ComplexHeatmap))
 library(RColorBrewer)
@@ -12,7 +18,6 @@ tissues <- c("Lung", "ColonTransverse", "Ovary", "Prostate", "BreastMammaryTissu
 names <- c("Age", "Ancestry", "BMI", "Sex")
 data <- matrix(nrow = length(tissues), ncol=4, dimnames = list(tissues, names))
 
-#tissue_info <- readRDS(paste0(first_dir, "/projects/bsc83/Projects/GTEx_v8/Jose/00_Data/Tissue_info_whole.rds"))
 tissue_info <- readRDS(paste0(project_path, "Data/Tissue_info_whole.rds"))
 
 tissue_info <- tissue_info[!grepl("BreastMammaryTissue_", tissue_info$tissue_ID),]
@@ -21,10 +26,8 @@ tissue_info <- tissue_info[tissue_info$tissue_ID %in% tissues,]
 n_samples <- c()
 for(tissue in tissues){ 
   print(tissue)
-  # model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results.rds"))
-  # model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_batch.rds"))
-  # model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_batch.rds"))
-  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_5_PEERs_continous.rds")) #Jose used the wrong name to the file DMR instead of DML
+
+  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_5_PEERs_continous.rds")) 
   data[tissue, "Age"] <- sum(model$AGE$adj.P.Val<0.05)# & model$AGE$logFC<0)
   if(TRUE %in% grepl("EUR",names(model))){
     data[tissue, "Ancestry"] <- sum(model$EURv1$adj.P.Val<0.05)# & model$AncestryEUR$logFC<0)
@@ -60,118 +63,41 @@ get_DEGs <- function(tissue, trait){
 DEGs <- lapply(c('EURv1','SEX2','AGE','BMI'), function(trait) lapply(tissues, function(tissue) get_DEGs(tissue, trait)))
 names(DEGs) <- c("Ancestry", "Sex", "Age", "BMI")
 for(trait in c("Ancestry", "Sex", "Age", "BMI")){names(DEGs[[trait]]) <- tissues}
-total_DEGs <- sapply(c("Ancestry", "Sex", "Age", "BMI"), function(trait) length(unique(unlist(DEGs[[trait]]))[!is.na(unique(unlist(DEGs[[trait]])))]))
 
-
-data <- data[,c("Ancestry", "Sex", "Age", "BMI")]
-create_heatmap <- function(data, tissue_info, size=12){ #It takes as input the whole data frame, the whole information on tissues, the subset of tissues and  diseases to be plotted, and the font size
-  #data, tissue_info, tissues_plot = rownames(data), diseases_plot = colnames(data), size=12
-  without_NA <- replace(data, is.na(data), "")
-  
-  tissues_cols <- tissue_info[, 3]
-  names(tissues_cols) <- tissue_info[, 1]
-  tissues_cols <- tissues_cols[tissues]
-  
-  traits_cols <- c('#C49122','#4B8C61','#70A0DF','#A76595')
-  names(traits_cols) <- c("Ancestry","Sex","Age","BMI")
-  
-  row_ha_left <- HeatmapAnnotation("Samples" = anno_barplot(n_samples,  #positives if we want to show the number of positives instead of n
-                                                            gp = gpar(fill = tissues_cols,
-                                                                      col = tissues_cols),
-                                                            border=F, width = unit(1.5, "cm")),
-                                   gap = unit(0.3,"cm"),
-                                   show_legend = F,
-                                   show_annotation_name = T,
-                                   annotation_name_rot = 90,
-                                   annotation_name_gp = gpar(fontsize = size),
-                                   which = "row")
-  column_ha_top <- HeatmapAnnotation("total unique number of DEGs" = anno_barplot(total_DEGs,
-                                                                                  border = F,
-                                                                                  gp = gpar(fill = traits_cols,
-                                                                                            col = traits_cols)),
-                                     show_annotation_name = T,
-                                     annotation_name_side = "left",
-                                     annotation_name_rot = 90,
-                                     annotation_name_gp = gpar(fontsize = 6.5),
-                                     height = unit(3, "cm"))
-  
-  
-  Heatmap(data,
-          heatmap_legend_param = list(legend_height = unit(5, "cm"),
-                                      grid_width = unit(1, "cm"),
-                                      labels_gp=gpar(fontsize=size),
-                                      title_gp=gpar(fontsize=size, fontface=2),
-                                      heatmap_legend_side = "bottom"),
-          col= colorRamp2( c(0,1,max(data[!is.na(data)])/4,max(data[!is.na(data)])/2,max(data[!is.na(data)])),
-                           brewer.pal(8, "BuPu")[c(1,2,4,5,7)]),
-          # col=colorRamp2( c(0,1,3000),
-          #                 c("white","#F5F8FC","#1266b5") ),
-          na_col = "white",
-          cluster_rows = F,
-          cluster_columns = F,
-          # name = "DE signal",
-          name = "#DEG",
-          row_names_side = "left",
-          column_names_side = "bottom",
-          column_names_rot =  90,
-          column_names_gp = gpar(fontsize = size),
-          column_names_max_height= unit(9, "cm"),
-          row_names_gp = gpar(fontsize = size),
-          left_annotation = row_ha_left,
-          top_annotation = column_ha_top,
-          cell_fun = function(j, i, x, y, width, height, fill) {
-            grid.text(my_pretty_num_function(without_NA[i, j]), x, y, gp = gpar(fontsize = size))}
-          
-  )
-}
-
-plot_path <- '~/marenostrum/Projects/GTEx_v8/Methylation/Plots/'
-pdf(paste0(plot_path, "Figure_S2.HeatmapDMP.v2.pdf"),
-    width = 5, height = 4)
-create_heatmap(data, tissue_info, size=10)
-dev.off()
 
 ### hier.part
-# proportion of total tissue expression variation explained by each trait --
-get_tissue_expression_variation_explained <- function(tissue){
+# proportion of total tissue  methylation variation explained by each trait --
+get_tissue_methylation_variation_explained <- function(tissue){
   print(tissue)
   
-  # if (tissue %in% c('Testis')) {
-  #   hier_res <- readRDS(paste0(project_path, "Tissues/",tissue, "/hier.part.5peers.continous.rds"))
-  #   tissue_expression_variation_explained <- sapply(traits[c(3:4)], function(trait) sum(hier_res[,paste0(trait,'_abs')]))/sum(sapply(traits[c(3:4)], function(trait) sum(hier_res[,paste0(trait,'_abs')])))
-  #   tissue_expression_variation_explained <- c(0, 0, tissue_expression_variation_explained[c(1,2)])
-  #   names(tissue_expression_variation_explained)[1] <- "Ancestry"
-  #   names(tissue_expression_variation_explained)[2] <- "Sex"
-  #   return(tissue_expression_variation_explained)  
-  # } else {
   hier_res <- readRDS(paste0(project_path, "varPart/",tissue, "_var_part.rds"))
   
   if(tissue %in% sex_tissues){
-    tissue_expression_variation_explained <- sapply(traits[-2], function(trait) sum(hier_res[,(trait)]))/sum(sapply(traits[-2], function(trait) sum(hier_res[,(trait)])))
-    tissue_expression_variation_explained <- c(tissue_expression_variation_explained[c(1)], 0, tissue_expression_variation_explained[c(2,3)])
-    names(tissue_expression_variation_explained)[2] <- "Sex"
+    tissue_methylation_variation_explained <- sapply(traits[-2], function(trait) sum(hier_res[,(trait)]))/sum(sapply(traits[-2], function(trait) sum(hier_res[,(trait)])))
+    tissue_methylation_variation_explained <- c(tissue_methylation_variation_explained[c(1)], 0, tissue_methylation_variation_explained[c(2,3)])
+    names(tissue_methylation_variation_explained)[2] <- "Sex"
   }else{
-    tissue_expression_variation_explained <- sapply(traits, function(trait) sum(hier_res[,(trait)]))/sum(sapply(traits, function(trait) sum(hier_res[,(trait)])))
+    tissue_methylation_variation_explained <- sapply(traits, function(trait) sum(hier_res[,(trait)]))/sum(sapply(traits, function(trait) sum(hier_res[,(trait)])))
   }
-  return(tissue_expression_variation_explained)  
+  return(tissue_methylation_variation_explained)  
 }
 
 
 traits <- c('EURv1','SEX','AGE','BMI')
-tissue_expression_variation_explained <- do.call(rbind.data.frame,
-                                                 lapply(tissues, function(tissue) get_tissue_expression_variation_explained(tissue)))
-colnames(tissue_expression_variation_explained) <- c("Ancestry","Sex","Age","BMI")
-rownames(tissue_expression_variation_explained) <- tissues    
+tissue_methylation_variation_explained <- do.call(rbind.data.frame,
+                                                 lapply(tissues, function(tissue) get_tissue_methylation_variation_explained(tissue)))
+colnames(tissue_methylation_variation_explained) <- c("Ancestry","Sex","Age","BMI")
+rownames(tissue_methylation_variation_explained) <- tissues    
 
 traits_cols <- c('#C49122','#4B8C61','#70A0DF','#A76595')
 names(traits_cols) <- c("Ancestry","Sex","Age","BMI")
 
 # bar plot
 plot_path <- paste0(project_path, "Plots/")
-pdf(paste0(plot_path, "Figure_1B.tissue_expression_variation_explained_new.pdf"),
+pdf(paste0(plot_path, "Figure_1B.tissue_methylation_variation_explained_new.pdf"),
     width = 3, height = 4)
 # width = 3, height = 9)
-barplot(t(tissue_expression_variation_explained[length(tissues):1,]),
+barplot(t(tissue_methylation_variation_explained[length(tissues):1,]),
         horiz = T,
         border = NA,
         col = traits_cols,
@@ -183,11 +109,10 @@ barplot(t(tissue_expression_variation_explained[length(tissues):1,]),
 axis(1, at = axTicks(1))
 dev.off()
 
-# number of tissues in which each trait is the main driver of tissue expression variation --
+# number of tissues in which each trait is the main driver of tissue methylation variation --
 traits <- c("Ancestry","Sex","Age","BMI")
-driver_traits <- as.vector(table(apply(tissue_expression_variation_explained, 1, function(x) traits[which.max(x)]))[traits])
+driver_traits <- as.vector(table(apply(tissue_methylation_variation_explained, 1, function(x) traits[which.max(x)]))[traits])
 names(driver_traits) <- traits
-#driver_traits['Ancestry'] <- 3
 
 # top annotation bar plot
 pdf(paste0(plot_path, "Figure_1B.barplot_top_variation_explained_new.pdf"),
@@ -213,32 +138,32 @@ get_tissue_mean_variation <- function(tissue){
   hier_res <- readRDS(paste0(project_path, "varPart/",tissue, "_var_part.rds"))
   
   if(tissue %in% sex_tissues){
-    tissue_expression_variation_explained <- sapply(traits_prev[-2], function(trait) mean(hier_res[,(trait)]))
-    tissue_expression_variation_explained <- c(tissue_expression_variation_explained[c(1)], 0, tissue_expression_variation_explained[c(2,3)])
-    names(tissue_expression_variation_explained)[2] <- "Sex"
+    tissue_methylation_variation_explained <- sapply(traits_prev[-2], function(trait) mean(hier_res[,(trait)]))
+    tissue_methylation_variation_explained <- c(tissue_methylation_variation_explained[c(1)], 0, tissue_methylation_variation_explained[c(2,3)])
+    names(tissue_methylation_variation_explained)[2] <- "Sex"
   }else{
-    tissue_expression_variation_explained <- sapply(traits_prev, function(trait) mean(hier_res[,(trait)]))
+    tissue_methylation_variation_explained <- sapply(traits_prev, function(trait) mean(hier_res[,(trait)]))
   }
-  return(tissue_expression_variation_explained)  
+  return(tissue_methylation_variation_explained)  
 }
 
 traits_prev <- c('EURv1','SEX','AGE','BMI')
-tissue_expression_variation_explained <- do.call(rbind.data.frame,
+tissue_methylation_variation_explained <- do.call(rbind.data.frame,
                                                  lapply(tissues, function(tissue) get_tissue_mean_variation(tissue)))
-colnames(tissue_expression_variation_explained) <- traits
-rownames(tissue_expression_variation_explained) <- tissues  
+colnames(tissue_methylation_variation_explained) <- traits
+rownames(tissue_methylation_variation_explained) <- tissues  
 
-# average gene expression variation explained per trait and tissue --
+# average methylation variation explained per trait and tissue --
 data <- cbind.data.frame("Tissue" = rep(tissues, 4),
                          "Trait" = unlist(lapply(traits, function(trait) rep(trait, length(tissues)))),
                          "DEGs" = unlist(lapply(traits, function(trait) sapply(tissues, function(tissue)  ifelse(tissue %in% sex_tissues & trait == "Sex", NA, length(DEGs[[trait]][[tissue]]))))),
                          "proportion_of_DEGs" <- proporton_of_DEGs_per_trait,
-                         "R2" = unlist(tissue_expression_variation_explained)
+                         "R2" = unlist(tissue_methylation_variation_explained)
 )
 data$Tissue <- factor(data$Tissue, levels = rev(tissues), order = T)
 data$Trait <- factor(data$Trait, levels = traits, order = T)
 
-pdf(paste0(plot_path, "Figure_1C.gene_expression_variation_explained_new.pdf"),
+pdf(paste0(plot_path, "Figure_1C.methylation_variation_explained_new.pdf"),
     width = 3, height = 4)
 ggplot(data,
        aes(x = Tissue,
@@ -258,7 +183,7 @@ ggplot(data,
         axis.title.x = element_text(size = 12))
 dev.off()
 
-pdf(paste0(plot_path, "Figure_1C.gene_expression_variation_explained.legend.pdf"),
+pdf(paste0(plot_path, "Figure_1C.methylation_variation_explained.legend.pdf"),
     width = 5, height = 9)
 ggplot(data,
        aes(x = Tissue,
@@ -285,23 +210,23 @@ get_tissue_mean_variation <- function(tissue){
   hier_res <- readRDS(paste0(project_path, "varPart/",tissue, "_var_part.rds"))
   
   if(tissue %in% sex_tissues){
-    tissue_expression_variation_explained <- hier_res[,traits_prev[-2]]
+    tissue_methylation_variation_explained <- hier_res[,traits_prev[-2]]
   }else{
-    tissue_expression_variation_explained <- hier_res[,traits_prev]
+    tissue_methylation_variation_explained <- hier_res[,traits_prev]
   }
-  return(tissue_expression_variation_explained)  
+  return(tissue_methylation_variation_explained)  
 }
 
 traits_prev <- c('EURv1','SEX','AGE','BMI')
-tissue_expression_variation_explained_all <- lapply(tissues, function(tissue) get_tissue_mean_variation(tissue))
-names(tissue_expression_variation_explained_all) <- tissues
+tissue_methylation_variation_explained_all <- lapply(tissues, function(tissue) get_tissue_mean_variation(tissue))
+names(tissue_methylation_variation_explained_all) <- tissues
 
 #install.packages('yarrr')
 library(yarrr)
 library(reshape2)
 library(scales)
 
-# 5.1.1 Prepare expression data ----
+# 5.1.1 Prepare methylation data ----
 # Function to parse tissue data
 melt.data <- function(tissue, data){
   print(tissue)
@@ -320,14 +245,13 @@ melt.data <- function(tissue, data){
     
   }
   min(d$R2)
-  #d$Trait <- gsub(pattern = "_abs",replacement = "", d$Trait)
   d$Tissue <- rep(tissue_info[tissue_info$tissue_ID==tissue, "tissue_abbrv"], nrow(d))
   return(d)
 }
 
 meth.data <- do.call(rbind.data.frame,
                       lapply(tissues, function(tissue) 
-                        melt.data(tissue, tissue_expression_variation_explained_all)
+                        melt.data(tissue, tissue_methylation_variation_explained_all)
                       ))
 meth.data <- meth.data[!is.na(meth.data$R2),]
 
@@ -378,10 +302,10 @@ cpgs_traits_all <- lapply(traits_prev, function(trait) unique(cpgs_traits[[trait
 names(cpgs_traits_all) <- traits_prev
 
 #### enrichment + annotation 
-annot <- read.delim('~/marenostrum/Projects/GTEx_v8/Methylation/Data/Methylation_Epic_gene_promoter_enhancer_processed.txt')
+annot <- read.delim('Data/Methylation_Epic_gene_promoter_enhancer_processed.txt')
 library(missMethyl)
 
-betas <- read.csv("~/marenostrum_scratch/GTEx/v9/Oliva/GPL21145_MethylationEPIC_15073387_v-1-0_processed.csv")$Name
+betas <- read.csv("Oliva/GPL21145_MethylationEPIC_15073387_v-1-0_processed.csv")$Name
 res <- list()
 for (trait in traits_prev) {
   print(trait)
@@ -395,7 +319,6 @@ for (trait in traits_prev) {
 traits <- c("Ancestry","Sex","Age","BMI")
 driver_traits <- (sapply(traits_prev, function(x) length(cpgs_traits[[x]])))
 names(driver_traits) <- traits
-#driver_traits['Ancestry'] <- 3
 
 # top annotation bar plot
 plot_path <- '~/marenostrum/Projects/GTEx_v8/Methylation/Plots/'
@@ -405,139 +328,6 @@ barplot(driver_traits, col = traits_cols, names.arg=c("Ancestry","Sex","Age","BM
 dev.off()
 plot.new()
 
-# Ancestry --
-# cpgname <- "cg19649313"
-# tissue <- 'Ovary'
-# 
-# betas <- (paste0(project_path,"Tissues/", tissue, "/data.rds"))[cpgname,]
-# 
-# metadata <- lapply(tissues, function(tissue) readRDS(paste0(project_path, "Tissues/",tissue, "/metadata.rds")))
-# names(metadata) <- tissues
-# 
-# admixture_ancestry <- read.table('~/marenostrum_scratch/GTEx/v8/genotype_data/admixture_inferred_ancestry.txt')
-# colnames(admixture_ancestry) <- c('SUBJID','AFRv1','EURv1','inferred_ancestry','AFRv2','EURv2')
-# 
-# EA_value <- sapply(tissues, function(tissue)
-#   median(as.numeric(betas[[tissue]][,colnames(betas[[tissue]]) %in% admixture_ancestry$SUBJID[admixture_ancestry$EURv1>=0.5]]))
-# )
-# AA_value <- sapply(tissues, function(tissue)
-#   median(as.numeric(betas[[tissue]][,colnames(betas[[tissue]]) %in% admixture_ancestry$SUBJID[admixture_ancestry$EURv1<0.5]]))
-# )
-# 
-# data <- cbind.data.frame("Ancestry" = c(rep("EA",length(EA_value)),
-#                                         rep("AA",length(AA_value))),
-#                          "value" = c(EA_value, AA_value),
-#                          "Tissue" = rep(tissues, 2))
-# data$Ancestry <- factor(data$Ancestry, levels = c("EA", "AA"), order = T)
-# data$Tissue <- factor(data$Tissue, levels = tissues,
-#                       order = T)
-# tissue_cols <- tissue_info[tissues, "colcodes"]
-# names(tissue_cols) <- as.character(levels(data$Tissue))
-# data$cpg <- rep(cpgname, nrow(data))
-# data$cpg <- factor(data$cpg)
-# 
-# p3 <- ggplot(data = data,
-#              aes(x = Ancestry,
-#                  y = (value),
-#                  col = Tissue),
-# ) +
-#   geom_violin(col = "black") +
-#   geom_boxplot(col = "black",
-#                fill = "white",
-#                outlier.shape = NA,
-#                notch = T,
-#                width = 0.25) +
-#   geom_point(aes(col = Tissue),
-#              size = 0.8) +
-#   geom_line(aes(group=Tissue)) +
-#   xlab("") +
-#   ylab("Beta (median)") +
-#   scale_color_manual(values = tissue_cols) +
-#   labs(title="") +
-#   facet_grid(~cpg) +
-#   theme_bw() +
-#   theme(panel.grid.major = element_blank(), 
-#         panel.grid.minor = element_blank(),
-#         axis.text = element_text(size = 12),
-#         axis.title = element_text(size = 14),
-#         plot.title = element_text(hjust = 0.5,
-#                                   size = 15),
-#         strip.background = element_rect(fill=traits_cols["Ancestry"]),
-#         legend.position = "none") 
-# 
-# p3
-# 
-# # #### example continous ancestry_tissue 
-# # tissue_data <- as.data.frame(t(betas$Lung)) ## need residuals
-# # tissue_data$SUBJID <- rownames(tissue_data)
-# # tissue_data <- merge(tissue_data, admixture_ancestry)
-# # tissue_data$cg04193820 <- as.numeric(tissue_data$cg04193820)
-# # library(ggpubr)
-# # 
-# # ggscatter(tissue_data, x = "EURv1", y = "cg04193820", 
-# #           add = "reg.line", conf.int = TRUE, 
-# #           cor.coef = TRUE, cor.method = "pearson",
-# #           xlab = "Prop EUR Ancestry", ylab = "Beta")
-# 
-# # Age --
-# cpgname <- "cg16867657"
-# betas <- lapply(tissues, function(tissue) readRDS(paste0(project_path,"Tissues/", tissue, "/data.rds"))[cpgname,])
-# names(betas) <- tissues
-# 
-# young_value <- sapply(tissues, function(tissue)
-#   median(as.numeric(betas[[tissue]][,metadata[[tissue]][as.numeric(metadata[[tissue]]$AGE) < 45, "SUBJID"]]))
-# )
-# old_value <- sapply(tissues, function(tissue)
-#   median(as.numeric(betas[[tissue]][,metadata[[tissue]][as.numeric(metadata[[tissue]]$AGE) >= 45, "SUBJID"]]))
-# )
-# 
-# data <- cbind.data.frame("Age" = c(rep("[20-45)",length(young_value)),
-#                                    rep("[45-70]",length(old_value))),
-#                          "value" = c(young_value, old_value),
-#                          "Tissue" = rep(tissues, 2))
-# data$Age <- factor(data$Age, levels = c("[20-45)", "[45-70]"), order = T)
-# data$Tissue <- factor(data$Tissue, levels = tissues,
-#                       order = T)
-# tissue_cols <- tissue_info[tissues, "colcodes"]
-# names(tissue_cols) <- as.character(levels(data$Tissue))
-# data$cpg <- rep(cpgname, nrow(data))
-# data$cpg <- factor(data$cpg)
-# 
-# p4 <- ggplot(data = data,
-#              aes(x = Age,
-#                  y = (value),
-#                  col = Tissue),
-# ) +
-#   geom_violin(col = "black") +
-#   geom_boxplot(col = "black",
-#                fill = "white",
-#                outlier.shape = NA,
-#                notch = T,
-#                width = 0.25) +
-#   geom_point(aes(col = Tissue),
-#              size = 0.8) +
-#   geom_line(aes(group=Tissue)) +
-#   xlab("") +
-#   ylab("Beta (median)") +
-#   scale_color_manual(values = tissue_cols) +
-#   labs(title="") +
-#   theme_bw() +
-#   theme(panel.grid.major = element_blank(), 
-#         panel.grid.minor = element_blank(),
-#         axis.text = element_text(size = 12),
-#         axis.title = element_text(size = 14),
-#         plot.title = element_text(hjust = 0.5,
-#                                   size = 15),
-#         strip.background = element_rect(fill=traits_cols["Age"]),
-#         legend.position = "none") +
-#   facet_grid(~cpg)
-# 
-# p4
-# library(ggpubr)
-# pdf(paste0(plot_path, "Figure_2E.tissue_sharing_examples.pdf"),
-#     width = 2, height = 8)
-# ggarrange(p3, p4, ncol = 2)
-# dev.off()
 
 ### plots like in cell genomics
 get_box_stats <- function(y, upper_limit = max(y) * 1.15) {
@@ -549,7 +339,7 @@ get_box_stats <- function(y, upper_limit = max(y) * 1.15) {
   ))
 }
 
-admixture_ancestry <- read.table('~/marenostrum_scratch/MN4/bsc83/bsc83535/GTEx/v8/genotype_data/admixture_inferred_ancestry.txt')
+admixture_ancestry <- read.table('Data/admixture_inferred_ancestry.txt')
 colnames(admixture_ancestry) <- c('SUBJID','AFRv1','EURv1','inferred_ancestry','AFRv2','EURv2')
 admixture_ancestry$Ancestry <- 'ADX'
 admixture_ancestry$Ancestry[admixture_ancestry$EURv1>=0.5] <- 'EUR'
@@ -559,8 +349,7 @@ metadata <- lapply(tissues, function(tissue) readRDS(paste0(project_path, "Tissu
 names(metadata) <- tissues
 
 
-get_gene_data <- function(tissue, df, gene_name){
-  #df <- cbind.data.frame(t(tpm[gene_name,]))
+get_dnam_data <- function(tissue, df, CpG_name){
   colnames(df) <- "Beta"
   df$Ancestry <- sapply(rownames(df), function(i) admixture_ancestry[admixture_ancestry$SUBJID==i,"Ancestry"])
   df$Ancestry <- gsub("EUR", "EA", df$Ancestry)
@@ -575,26 +364,21 @@ get_gene_data <- function(tissue, df, gene_name){
   df$Age <- factor(df$Age, 
                    levels = c("[20-45)", "[45-70]"),
                    order = T)
-  # df$BMI_int <- sapply(rownames(df), function(i) mdata[[tissue]][mdata[[tissue]]$Sample==i,"BMI"])
-  # df$BMI <- sapply(df$BMI_int, function(bmi) pseudo_categorize_bmi(bmi))
-  # df$BMI <- factor(df$BMI,
-  #                  levels = c("Normal", "Overweight", "Obese"),
-  #                  order = T)
+
   df$Tissue <- rep(tissue_info[tissue_info$tissue_ID==tissue, "tissue_abbrv"], nrow(df))
-  df$cpg <- rep(gene_name, nrow(df))
+  df$cpg <- rep(CpG_name, nrow(df))
   return(df)
 }
 
 names(traits_prev) <- traits
 names(traits) <- traits_prev
-get_gene_plot <- function(trait, tissue, gene_name){
-  print(paste0(trait, " - ", tissue, " - ", gene_name))
-  # Gene TPM --
-  tpm <- cbind.data.frame(t(readRDS(paste0(project_path,"Tissues/", tissue, "/data.rds"))[gene_name,]))
-  # tpm: matrix with gene TPM expression data for spleen samples used in this study. T
+get_cpg_plot <- function(trait, tissue, CpG_name){
+  print(paste0(trait, " - ", tissue, " - ", CpG_name))
+  # DNAm --
+  tpm <- cbind.data.frame(t(readRDS(paste0(project_path,"Tissues/", tissue, "/data.rds"))[CpG_name,]))
   
-  # get gene data --
-  data <- get_gene_data(tissue, tpm, gene_name)
+  # get DNAm data --
+  data <- get_dnam_data(tissue, tpm, CpG_name)
   cols <- rep(traits_cols[trait], length(levels(data[,trait])))
   names(cols) <- as.character(levels(data[,trait]))
   
@@ -618,7 +402,7 @@ get_gene_plot <- function(trait, tissue, gene_name){
     scale_fill_manual(values = cols) +
     stat_summary(fun.data = get_box_stats, geom = "text",
                  hjust = 0.5, vjust = 0.9, size = 3) +
-    labs(title=paste0(gene_name, " (", tissue_info[tissue_info$tissue_ID==tissue, "tissue_abbrv"], ")")) +
+    labs(title=paste0(CpG_name, " (", tissue_info[tissue_info$tissue_ID==tissue, "tissue_abbrv"], ")")) +
     theme(panel.background = element_blank(),
           panel.grid.major = element_blank(), 
           panel.grid.minor = element_blank(),
@@ -633,7 +417,7 @@ get_gene_plot <- function(trait, tissue, gene_name){
   
   # plot 2 --
   d <- data.frame("variable" = trait,
-                  "value"  = dma_10[[tissue]][[traits_prev[trait]]][dma_10[[tissue]][[traits_prev[trait]]]$cpg == gene_name, "R2"])
+                  "value"  = dma_10[[tissue]][[traits_prev[trait]]][dma_10[[tissue]][[traits_prev[trait]]]$cpg == CpG_name, "R2"])
   variable_col <- traits_cols[trait]
   names(variable_col) <- trait
   
@@ -672,7 +456,7 @@ gene_examples <- list(#c("Ancestry", "Ovary", "cg19649313"),
 library(ggpubr)
 plot_path <- '~/marenostrum/Projects/GTEx_v8/Methylation/Plots/'
 for(i in 1:length(gene_examples)){
-  p <- get_gene_plot(gene_examples[[i]][1], gene_examples[[i]][2], gene_examples[[i]][3])  
+  p <- get_cpg_plot(gene_examples[[i]][1], gene_examples[[i]][2], gene_examples[[i]][3])  
   ggexport(p,filename = paste0(plot_path, "Figure_2E.", gene_examples[[i]][1], "_", gene_examples[[i]][2], "_", gene_examples[[i]][3], ".v2.pdf"),
            width = 3, height = 4)
 }

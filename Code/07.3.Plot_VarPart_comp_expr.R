@@ -1,4 +1,9 @@
 ##### plot hier.part results ##### overlap with expression
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Plot variance partition results on DNA methylation data per tissue on demographic traits + overlap gene expression
+# @software version: R=4.2.2
 rm(list=ls())
 suppressPackageStartupMessages(library(ComplexHeatmap))
 library(RColorBrewer)
