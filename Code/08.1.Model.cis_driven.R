@@ -2,6 +2,7 @@
 # @Author: Winona Oliveros Diez
 # @E-mail: winn95@gmail.com
 # @Description: Model cis-driven ancestry-DMPs
+# @software version: R=4.2.2
 
 # Parsing
 library(optparse)
@@ -44,16 +45,6 @@ if(length(levels(metadata$SEX))==1){
 metadata$DTHHRDY <- as.factor(metadata$DTHHRDY)
 rownames(metadata) <- metadata$SUBJID
 metadata$SUBJID <- NULL
-# if(sum(metadata$Ancestry=="AFR")<5){
-#   print("Not enough AFRs")
-#   metadata <- metadata[, !colnames(metadata) %in% c("Ancestry")]
-#   individual_variables <- individual_variables[!individual_variables %in% "Ancestry"]
-# }
-
-### make sure order is the same
-#beta <- beta[,rownames(metadata)]
-
-#probes <- rownames(beta)
 
 metadata_2 <- metadata[,c(individual_variables)]
 
@@ -66,8 +57,8 @@ print("metadata is prepared")
 print("Reading mQTL data")
 # eGpGs and independent mQTLs ----
 inpath_mqtls <- "/gpfs/scratch/bsc83/MN4/bsc83/bsc83535/GTEx/v9/mQTLs/"
-#inpath_eqtls <- "~/GTEx_v8_data/cisQTLs/"
 mgene_data <- as.data.frame(data.table::fread(paste0(inpath_mqtls,tissue,".mQTLs.conditional.txt.gz")))
+# Filter variants distance and significance
 mgene_data <- mgene_data[mgene_data$V7<0.05 & abs(mgene_data$V3)<250000,]
 mCpGs <- unique(gsub(':.*','',mgene_data$V1[mgene_data$V7<0.05 & abs(mgene_data$V3)<250000]))
 
@@ -104,7 +95,7 @@ mVariants <- c(unique(mgene_data$V2),mgene_data_extra$variant_id) # imQTLs
 print(paste0("No. of mVariants (i-mQTL) in ancestry DMP: ", length(mVariants)))
 
 # Genotyped eVariants ----
-# Read the genotypes for the sVariants which are also independent cis-eQtls 
+# Read the genotypes for the mVariants which are also independent cis-mQtls 
 # Job run in cluster
 #vcftools --gzvcf ${vcf_file} --snps <(zcat /gpfs/projects/bsc83/Data/GTEx_v8/cisQTLs/GTEx_Analysis_v8_sQTL_independent/${tissue_id}.v8.independent_sqtls.txt.gz  | cut -f7 | awk '{if(NR>1)print}')  --recode --stdout | gzip -c > ${pathOut}/${tissue}.isQTLs.Donor_genotypes.vcf.gz
 #vcf-query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT[\t%SAMPLE=%GTR]\n' ${pathOut}/${tissue}.isQTLs.Donor_genotypes.vcf.gz | gzip -c > ${pathOut}/${tissue}.isQTLs.Donor_genotypes.txt.gz
@@ -126,7 +117,7 @@ if(!identical(rownames(metadata_2), colnames(variants_genotype)[6:ncol(variants_
 }
 
 if(length(mVariants) > 1){
-  # Subet genotype file and only keep eVariants in eGenes differentially expressed --
+  # Subet genotype file and only keep eVariants in mCpGs differentially methylated --
   variants_genotype <- variants_genotype[variants_genotype$variant_id %in% mVariants,] 
 }
 
@@ -140,7 +131,7 @@ vg.tissue_long <- reshape2::melt(vg.tissue_wide,
                                  variable.name = 'Individual_ID',
                                  value.name = 'genotype')
 if(length(mVariants) == 1){
-  # Subet genotype file and only keep eVariants in mCpGs differentially methylated --
+  # Subet genotype file and only keep mVariants in mCpGs differentially methylated --
   variants_genotype <- variants_genotype[variants_genotype$variant_id %in% mVariants,]
   vg.tissue_mod <- vg.tissue_mod[vg.tissue_mod$variant_id %in% mVariants,]
   vg.tissue_wide <- vg.tissue_wide[vg.tissue_wide$variant_id %in% mVariants,]
@@ -150,7 +141,7 @@ if(length(mVariants) == 1){
 # Subset tissue samples ----
 vg.tissue_long <- vg.tissue_long[vg.tissue_long$Individual_ID %in% rownames(metadata_2),]
 
-# eVariants in VCF -> eVariants in eGenes with at leats 1 independent eQTL with MAF > 0.001 ----
+# eVariants in VCF -> mVariants in mCpGs with at leats 1 independent mQTL with MAF > 0.001 ----
 mVariants_lost <- mVariants[!mVariants %in% unique(vg.tissue_long$variant_id)] # MAF < 0.001?
 mVariants <- mVariants[mVariants %in% unique(vg.tissue_long$variant_id)]
 print(paste0("No. of eVariants (i-mQTL) with MAF > 0.01 in ancestry DMP: ", length(mVariants)))
@@ -161,12 +152,12 @@ d[["imQTL:MAF_b_01"]] <- length(mVariants_lost)
 d[["imQTL:MAF_01"]] <- length(mVariants)
 d[["minMAF"]] <-  min(mgene_data[mgene_data$V2 %in% mVariants, "V6"])
 
-# Subset eQTLs in eGenes differentially spliced with at least 1 genotyped independent eQTL with MAF > 0.001 ----
+# Subset mQTLs in mCpGs differentially methylated with at least 1 genotyped independent mQTL with MAF > 0.001 ----
 mgene_data <- mgene_data[mgene_data$V2 %in% mVariants,]
 mgene_data_extra <- mgene_data_extra[mgene_data_extra$variant_id %in% mVariants,]
 imGenes.de.maf01 <- c(unique(gsub(':.*','',mgene_data$V1[mgene_data$V7<0.05])),mgene_data_extra$cpg_id[mgene_data_extra$qval<0.05])
 
-# Subset genes with ieQTL with MAF 001 (in vcf file) ----
+# Subset genes with imQTL with MAF 001 (in vcf file) ----
 dea_res <- dea_res[rownames(dea_res) %in% imGenes.de.maf01,]
 d[["Ancestry:DMP-imQTL:MAF01"]] <- length(imGenes.de.maf01)
 
@@ -187,19 +178,19 @@ print('Finished parsing mQTLs')
 ############### Linear model for each event #########################
 
 ## To build the model:
-# 1. For each gene, recover its eVariants (ieQTLS with MAF 001) ----
+# 1. For each gene, recover its eVariants (imQTLS with MAF 001) ----
 # 2. Compare 2 models:
-# residuals ~ Age + Sex + BMI + cis-effects (ieQTL(s))
-# residuals ~ Age + Sex + BMI + cis-effects (ieQTL(s)) + Ancestry 
+# residuals ~ Age + Sex + BMI + cis-effects (imQTL(s))
+# residuals ~ Age + Sex + BMI + cis-effects (imQTL(s)) + Ancestry 
 # Is Ancestry adding someting that the sQTLs did not capture, a not cis-driven effect?
 library(limma)
 
 genes <- rownames(dea_res)
 
-# Recover the expression residuals associated with DEGs ----
+# Recover the expression residuals associated with DMPs ----
 meth_residuals <- readRDS(paste0(project_path,'Tissues/', tissue,"/methylation_residuals.continous.rds"))
 
-# Susbet residuals of genes to be modelled ----
+# Susbet residuals of CpGs to be modelled ----
 if(length(rownames(dea_res))==1){
   meth_residuals <- as.data.frame(t(as.matrix(meth_residuals[rownames(dea_res),])))
   rownames(meth_residuals) <- rownames(dea_res)
@@ -226,8 +217,8 @@ print('*****************************************************')
 cat('\n')
 cat('\n')
 
-###### code for cis-driven expressn
-#### Function to fit  linear model per gene, w and w/ independent cis-eQTL of the eGene ####
+###### code for cis-driven methylation
+#### Function to fit  linear model per CpG, w and w/ independent cis-mQTL of the mCpGs ####
 source("/gpfs/projects/bsc83/Projects/GTEx_v8/Methylation/Scripts/Hier_part_mod.R")
 library(tidyverse)
 library(dplyr)
@@ -236,13 +227,12 @@ lm.cis_models <- function(g){
   
   print(paste0("----  ", g, "  ----"))
   
-  # Get gene residual expression across samples ----
+  # Get gene residual methylation across samples ----
   if(is.vector(meth_residuals)){
     res.g <- as.data.frame(meth_residuals)
   }else{
     res.g <- as.data.frame(t(meth_residuals[g,])) 
   }
-  #res.g_long <- data.frame(Individual_ID=colnames(res.g), residuals=res.g[1,], row.names=NULL) #residuals wide to long
   if (ncol(res.g)>1) {
     res.g_long <- reshape2::melt(res.g, variable.name="Individual_ID", value.name = "residuals")
   } else {
@@ -259,18 +249,18 @@ lm.cis_models <- function(g){
   df <- df %>% mutate_if(is.character,as.factor)
   print(head(df))
   
-  print(paste0('Fitting the model with cis-eQTLs'))
+  print(paste0('Fitting the model with cis-mQTLs'))
   # 1. Select gene imQTL
   # 2. Select donors with genotyped imQTL
   # 3. Select traits with variance
   # 4. Select imQTLs with variance
   # 5. Run models
   
-  # 1. Retrieve the eVariants (ieQTLs in gene) ----
+  # 1. Retrieve the eVariants (imQTLs in CpG) ----
   variants.tissue_g <- gene_variants.list[[g]]
   print(paste0("The CpG ", g, " has a total of ",length(variants.tissue_g)," mVariants"))
   
-  # Retrieve the genotype of the eVariants
+  # Retrieve the genotype of the mVariants
   vg_g <- droplevels(vg.tissue_long[vg.tissue_long$variant_id%in%variants.tissue_g,])
   print(head(vg_g))
   
@@ -279,7 +269,7 @@ lm.cis_models <- function(g){
   snps_na <- unique(vg_g[is.na(vg_g$genotype),]$variant_id) # individuals with missing genotypes
   snps_in <- unique(vg_g$variant_id)[!unique(vg_g$variant_id)%in%snps_na] 
   if(length(snps_in)==0){
-    print(paste0(g, " has 0 eVariants without NAs"))
+    print(paste0(g, " has 0 mVariants without NAs"))
     return(NA)
     break
   }
@@ -296,12 +286,7 @@ lm.cis_models <- function(g){
   # Merge res.md.filtered (residuals + metadata) & variants (vg_g.filtered.wide) by Individual_ID
   df <- merge(res.md.filtered, vg_g.filtered.wide, by = 'Individual_ID')
   df <- df %>% mutate_if(is.character,as.factor)
-  # All genotyped individuals are EUR for gene ENSG00000235615.2 !!!!
-  # if(length(levels(df$Ancestry))==1){
-  #   print(paste0(g, " only has genotyped individuals of one ancestry"))
-  #   return(NA)
-  #   break
-  # }
+
   variants_def <- colnames(df)[!colnames(df)%in%c(c('PEER1','PEER2','PEER3','PEER4','PEER5'),individual_variables,'Individual_ID','residuals')]
   
   
@@ -311,8 +296,7 @@ lm.cis_models <- function(g){
   its_in.list <- its_var[names(its_var)%in%its_in]
   
   # 4. check variance of snps before being included in the 'basal' model ----
-  #snps_var <- sapply(variants_def, function(v) var(as.numeric(df[[v]])), simplify=F)
-  #snps_in <- names(snps_var)[snps_var>0]
+
   snps_table <- sapply(variants_def, function(v) table(as.numeric(df[[v]])), simplify=F)
   snps_var <- sapply(variants_def, function(v) sum(table(as.numeric(df[[v]]))>2)==length(table(as.numeric(df[[v]]))) & 
                        length(table(as.numeric(df[[v]])))>1, simplify=F)  # at least 3 donors of each genotype
@@ -332,7 +316,7 @@ lm.cis_models <- function(g){
                            data=df)
     multi.fit.modelB <- lm(lm_formula.modelB,
                            data=df)
-    #Check if there are linearly dependent sVariants ----
+    #Check if there are linearly dependent mVariants ----
     if(length(snps_in)>1){
       # cor matrix ----
       df.snps <- df[,colnames(df)%in%snps_in]
@@ -340,7 +324,7 @@ lm.cis_models <- function(g){
       correlationMatrix <- cor(df.snps)
       
       # findCorrelation from {caret} package (filter cutoff=0.9 -> out) ----
-      #print('Using findCorrelation from caret package to filter linearly dependent sVariants: cutoff>0.9 -> out ')
+      print('Using findCorrelation from caret package to filter linearly dependent sVariants: cutoff>0.85 -> out ')
       highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.85, names = T)
       snps.out <- ifelse(length(highlyCorrelated)==0, NA, paste(highlyCorrelated,collapse = ":"))
       
@@ -350,7 +334,7 @@ lm.cis_models <- function(g){
         snps.f.out <- unlist(strsplit(snps.out, split = ":"))
         snps_in <- snps_in[!snps_in%in%snps.f.out]    
         if(length(snps_in)==0){
-          print(paste0(g, " has 0 eVariants with variance"))
+          print(paste0(g, " has 0 mVariants with variance"))
           return(NA)
           break
         }

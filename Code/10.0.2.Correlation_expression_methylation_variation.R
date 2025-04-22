@@ -4,7 +4,7 @@
 #!/usr/bin/env Rscript
 # @Author: Jose Miguel Ramirez & Winona Oliveros
 # @E-mail: jose.ramirez1@bsc.es & winona.oliveros@bsc.es
-# @Description: Code to correlate gene expression and DNA methylation
+# @Description: Code to correlate gene expression and DNA methylation at the variability level
 # @software version: R=4.2.2
 
 #Loading libraries
@@ -15,11 +15,7 @@ setwd(system("pwd", intern = T)) #If in linux
 # setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) #If using Rstudio
 # setwd("..")
 
-#Option 1: Correlate all DMPs to all genes
-#Option 2: Correlate all probes to all genes
-#Option 3: Correlate all DMPs to all DEGs:
-# option <- 3 #To edit depending on the set of probe-genes we want to consider
-# print(paste("Option", option))
+#Correlate all DVPs to all DVGs:
 
 # Parsing
 library(optparse)
@@ -41,31 +37,6 @@ data_path <- "/gpfs/projects/bsc83/Projects/GTEx_v8/Methylation/Data/"
 annotation <- read.delim(paste0(data_path, "Methylation_Epic_gene_promoter_enhancer_processed.txt"), sep = '\t', header = T)
 Sys.time()
 
-# Here we have the code to clean the annotation and add nearest gene to unannotated promoters and enhancers
-# These edits were saved into the _processed file already
-# 
-# library(tidyverse)
-# library(tidyr)
-# library(dplyr)
-# annotation <- read.csv("~/marenostrum_scratch/GTEx/v9/Oliva/GPL21145_MethylationEPIC_15073387_v-1-0_processed.csv") ### procesed file
-# annotation <- annotation %>% separate_rows(UCSC_RefGene_Name,UCSC_RefGene_Group, sep = ';')
-# annotation <- annotation %>% distinct()
-# ## I will only consider genes associated to Enhancer/promoter and/or with a gene annotated on the manifest file
-# promoter_associated_probes <- annotation[annotation$Regulatory_Feature_Group=='Promoter_Associated',c("IlmnID","UCSC_RefGene_Name","Regulatory_Feature_Group", "Phantom5_Enhancers", "UCSC_RefGene_Group")]
-# enhancer_associated_probes <- annotation[annotation$Phantom5_Enhancers!='',c("IlmnID","UCSC_RefGene_Name","Regulatory_Feature_Group", "Phantom5_Enhancers", "UCSC_RefGene_Group")]
-# gene_body_associated_probes <- annotation[grep('Body',annotation$UCSC_RefGene_Group),c("IlmnID","UCSC_RefGene_Name","Regulatory_Feature_Group", "Phantom5_Enhancers", "UCSC_RefGene_Group")]
-# exon_body_associated_probes <- annotation[grep('1stExon',annotation$UCSC_RefGene_Group),c("IlmnID","UCSC_RefGene_Name","Regulatory_Feature_Group", "Phantom5_Enhancers", "UCSC_RefGene_Group")]
-# exon_gene <- rbind(gene_body_associated_probes, exon_body_associated_probes)
-# 
-# exon_gene <- exon_gene[!exon_gene$IlmnID %in% enhancer_associated_probes$IlmnID,]
-# exon_gene <- exon_gene[!exon_gene$IlmnID %in% promoter_associated_probes$IlmnID,]
-# enhancer_associated_probes <- enhancer_associated_probes[!enhancer_associated_probes$IlmnID %in% promoter_associated_probes$IlmnID,]
-# exon_gene$Type <- 'Gene_Associated'
-# enhancer_associated_probes$Type <- 'Enhancer_Associated'
-# promoter_associated_probes$Type <- 'Promoter_Associated'
-# gene_prom_enh_cpgs <- rbind(exon_gene, enhancer_associated_probes, promoter_associated_probes)
-# write.table(gene_prom_enh_cpgs, '~/marenostrum/Projects/GTEx_v8/Methylation/Data/Methylation_Epic_gene_promoter_enhancer_processed.txt', sep = '\t',
-#             col.names = T, row.names = F, quote = F)
 
 #From ensembl id to gene symbol
 gene_annotation <- read.delim("/gpfs/projects/bsc83/MN4/bsc83/Projects/GTEx_v8/Jose/04_Smoking/github/analysis/data/public/gencode.v26.GRCh38.genes.bed", header=F)[,c(6,7)]
@@ -82,11 +53,8 @@ gene_annotation$symbol[gene_annotation$gene=="ENSG00000228741.2"] <- "GC13P02455
 print("Running")
 print(tissue)
 Sys.time()
-#results_DML <- readRDS(paste0("Tissues/", tissue, "/DML_results_5_PEERs_continous.rds"))
 
 ### read DEG ####
-#GTEx_v8 <- readRDS('/gpfs/projects/bsc83/MN4/bsc83/Projects/ribosomal_proteins/Winona/2022_Ribosomal_analysis/Data/Data_set_1.rds')
-#head(GTEx_v8)
 
 sexual_tissues <- c("Prostate", "Testis", "Ovary")
 if(tissue %in% sexual_tissues){
@@ -146,19 +114,7 @@ for (trait in traits_expr) {
   annotation_enhancer <- annotation[annotation$Type=="Enhancer_Associated",]
   annotation_gene_body <- annotation[annotation$Type=="Gene_Associated",]
   
-  #individual_variables <- c("EURv1", "SEX2", "AGE", "BMI")
-  # if (trait == 'EURv1') {
-  #   trait_deg <- 'Ancestry'
-  # } 
-  # if (trait == 'SEX2') {
-  #   trait_deg <- 'Sex'
-  # } 
-  # if (trait == 'AGE') {
-  #   trait_deg <- 'Age'
-  # } 
-  # if (trait == 'BMI') {
-  #   trait_deg <- 'BMI'
-  # }
+
   expr <- readRDS(paste0("Tissues/",tissue, "/DVG_",trait,".rds"))
   deg <-  rownames(expr[expr$Adj.P.Value<0.05,])
   

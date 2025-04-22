@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Overlap between Differentially expressed genes and differentially methylated genes
+# @software version: R=4.2.2
+
 #########################################
 #### Overlap DMG and DEG #####
 #########################################

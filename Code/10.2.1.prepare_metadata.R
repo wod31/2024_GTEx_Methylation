@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 # @Author: Jose Miguel Ramirez
 # @E-mail: jose.ramirez1@bsc.es
-# @Description: Code to prepare the necessary metadata per tissue
+# @Description: Code to prepare the necessary metadata per tissue for gene expression
 # @software version: R=4.2.2
 
 #Set path
@@ -55,23 +55,7 @@ counts <- counts[rownames(counts) %in% gene_annotation$ensembl.id,]
 #Reading the PEER factors. The files are publicly available in the GTEx portal under "GTEx_Analysis_v8_eQTL_covariates.tar.gz"
 peer_path <- paste0(data_dir, "cis_QTLs/cis_eQTLs/GTEx_Analysis_v8_eQTL_covariates/") # This is the path where we have located the extracted information
 
-# Parsing the clinical data into the format we want: From one variable with all the diseases (comma separated) to one variable per disease (levels 0=healthy and 1=disease)
-# clinical_data <- read.csv("/gpfs/projects/bsc83/Projects/GTEx_v8/Jose/04_Smoking/github/analysis/data/public/histology_annotation.csv") # File downloaded directly from the GTEx portal: https://gtexportal.org/home/histologyPage# 
-# df1 <- na.omit(stack(setNames(strsplit(clinical_data$Pathology.Categories, ","), seq_len(nrow(clinical_data))))[, 2:1])
-# df1$values <- gsub(" ","",df1$values)
-# tab <- as.data.frame.matrix(table(df1))
-# clinical_data <- cbind(clinical_data, tab)
-# 
-# clinical_data[clinical_data$monckeberg==1,"sclerotic"] <- 1  #Monckeberg samples should be annotated as sclerotic, as Monckeberg is a type of sclerosis
-# #Atherosclerosis, atherosis, calcification and sclerotic (including Monckeberg) will be combined into a single variable that I will call atherosclerosis
-# clinical_data$atherosclerosis <- as.numeric(clinical_data$atherosclerosis | clinical_data$atherosis | clinical_data$sclerotic | clinical_data$calcification)
-# clinical_data <- clinical_data[,-which(colnames(clinical_data) %in% c("atherosis", "calcification", "sclerotic", "monckeberg"))]
-# #Remove non relevant phenotypes (e.g., non diseases)
-# # clinical_data <- clinical_data[!colnames(clinical_data) %in% c("clean_specimens", "macrophages", "pigment", "no_abnormalities", "post_menopausal", "monckeberg", "spermatogenesis", "congestion")] #spermatogenesis is not correctly annotated, a 1 in the variable sometimes refers to "active spermatogenesis" in the pathology notes and some others to "reduced spermatogenesis", as these categories are automatically extracted from the pathology annotations
-# clinical_data <- clinical_data[!colnames(clinical_data) %in% c("clean_specimens", "macrophages", "pigment", "no_abnormalities", "post_menopausal", "spermatogenesis", "congestion")] #spermatogenesis is not correctly annotated, a 1 in the variable sometimes refers to "active spermatogenesis" in the pathology notes and some others to "reduced spermatogenesis", as these categories are automatically extracted from the pathology annotations
 
-#Save this histology annotation
-# write.csv(clinical_data, "data/public/histological_data.csv", na="NA")
 
 #Function to call later on 
 keep_diseases <- function(table){
@@ -148,22 +132,7 @@ create_metadata <- function(tissue){ #Function to get the metadata per tissue
   saveRDS(tpm_tissue, paste0("Tissues/", tissue_id, "/tpm.rds"))
   saveRDS(exprs_genes, paste0("Tissues/", tissue_id, "/expressed_genes.rds"))
   
-  #Adding clinical traits to metadata
-  # histology_annotation_tissue <- clinical_data[clinical_data$Tissue == tissue, ] #Annotation for our tissue of itnerest
-  # histology_annotation_tissue <- histology_annotation_tissue[histology_annotation_tissue$Tissue.Sample.ID %in% metadata_subset$Sample, ] #Annotation for our samples of interest
-  # histology_annotation_tissue <- rbind(histology_annotation_tissue, clinical_data[clinical_data$Subject.ID %in% metadata_subset$Donor[!metadata_subset$Donor %in% histology_annotation_tissue$Subject.ID] & clinical_data$Tissue==tissue, ])
-  # 
-  # count_tables <- mapply(table, histology_annotation_tissue[10:ncol(histology_annotation_tissue)])
-  # count_tables <- count_tables[sapply(count_tables, function(table) keep_diseases(table))] #Clinical traits with more than 20 healthy and diseased individuals
-  # if(length(count_tables)>0){ #If there are clinical traits that fit our criteria
-  #   histology_annotation_tissue_to_save <- histology_annotation_tissue[,colnames(histology_annotation_tissue) %in% c("Subject.ID", names(count_tables))]
-  #   #Clinical traits need to be factors for downstream analysis
-  #   for(disease in colnames(histology_annotation_tissue_to_save)){ histology_annotation_tissue_to_save[[disease]] <- as.factor(histology_annotation_tissue_to_save[[disease]]) }
-  #   
-  #   #Merging the previous annotation to the disease annotation
-  #   metadata_subset <- merge(metadata_subset, histology_annotation_tissue_to_save, by.x="Donor", by.y="Subject.ID")
-  # }
-  saveRDS(metadata_subset, paste0("Tissues/", tissue_id, "/metadata_expression.rds"))
+   saveRDS(metadata_subset, paste0("Tissues/", tissue_id, "/metadata_expression.rds"))
   return(metadata_subset)
 }
 

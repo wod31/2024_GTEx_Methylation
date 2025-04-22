@@ -3,9 +3,9 @@
 ###################################################
 
 #!/usr/bin/env Rscript
-# @Author: Jose Miguel Ramirez and Raquel Garcia-Perez
+# @Author: Jose Miguel Ramirez and Raquel Garcia-Perez; Adapted by Winona Oliveros
 # @E-mail: jose.ramirez1@bsc.es
-# @Description: Code to run residuals on gene expression
+# @Description: Code to run residuals on gene expression and DEG
 # @software version: R=4.2.2
 rm(list=ls())
 

@@ -1,4 +1,7 @@
 #!/bin/bash
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Script to run on the cluster the modeling of cis-driven effects
 
 #SBATCH --job-name=cis-driven-DMP
 #SBATCH --output=/gpfs/projects/bsc83/Projects/GTEx_v8/Methylation/out/CisDriven_%A.out

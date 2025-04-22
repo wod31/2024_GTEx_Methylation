@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Jose Miguel Ramirez and Raquel Garcia-Perez; Adapted by Winona Oliveros
+# @E-mail: jose.ramirez1@bsc.es
+# @Description: Code to Plor correlation results; general overview
+# @software version: R=4.2.2
+
 library(ComplexHeatmap)
 library(RColorBrewer)
 suppressPackageStartupMessages(library(circlize))

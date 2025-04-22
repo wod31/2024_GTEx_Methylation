@@ -1,4 +1,9 @@
 #!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Plot Results cis-driven analysis qval 005
+# @software version: R=4.2.2
+
 set.seed(1)
 
 # Libraries ----
@@ -25,13 +30,11 @@ traits <- names(traits_cols)
 
 # Tissues ---
 first_dir <- "/gpfs/projects/bsc83/"
-first_dir <- "~/marenostrum/"
 
 project_path <- paste0(first_dir, "Projects/GTEx_v8/Methylation/")
 
 tissues <- c("Lung", "ColonTransverse", "Ovary", "Prostate", "BreastMammaryTissue", "MuscleSkeletal", "KidneyCortex", "Testis", "WholeBlood")
 names <- c("Age", "Ancestry", "BMI", "Sex")
-#data <- matrix(nrow = length(tissues), ncol=4, dimnames = list(tissues, names))
 
 tissue_info <- readRDS(paste0(first_dir, "Projects/GTEx_v8/Methylation/Data/Tissue_info_whole.rds"))
 
@@ -43,14 +46,6 @@ metadata <- lapply(tissues, function(tissue) readRDS(paste0(project_path,"Tissue
 names(metadata) <- tissues
 
 # ---- Analysis ---- ####
-# 1.1 mGene data ----
-# inpath_mqtls <- "~/marenostrum_scratch/GTEx/v9/mQTLs/"
-# mCpGs <- lapply(tissues, function(tis) {
-#   mgene_data <- as.data.frame(data.table::fread(paste0(inpath_mqtls,tis,".mQTLs.conditional.txt.gz")))[mgene_data$V7<0.05 & abs(mgene_data$V3)<250000,]
-#   #mgene_data <- mgene_data[mgene_data$V7<0.05 & abs(mgene_data$V3)<250000,]
-#   unique(gsub(':.*','',mgene_data$V1[mgene_data$V7<0.05 & abs(mgene_data$V3)<250000]))})
-# names(mCpGs) <- tissues
-
 
 # 1.2 Differential methylation results ----
 results_DML <- lapply(tissues, function(tis) 
@@ -66,7 +61,6 @@ names(results_DML_all) <- tissues
 DMP <- lapply(tissues, function(tis) 
   rownames(results_DML_all[[tis]][results_DML_all[[tis]]$adj.P.Val<0.05,]))
 names(DMP) <- tissues
-
 
 # 1.3 cis-driven classification ----
 
@@ -99,14 +93,11 @@ dd <- data[,c("Cis-driven",
               "Not_cis-driven", 
               "Too_Many_mQTL")]
 
-#dd$`Ancestry:DMP:not_eCpG` <- dd$`Ancestry:DMP` - dd$`Ancestry:DMP:eGpG`
-#dd <- dd[,c(1,7,2,3,4,5,6)]
 
 # Data for bar plot --
-ddp <- cbind.data.frame(#"not mGene" = dd$`Ancestry:DMP` - dd$`Ancestry:DMP:eGpG`, # not sGenes
-                        "not cis-driven" = dd$`Not_cis-driven`,
+ddp <- cbind.data.frame("not cis-driven" = dd$`Not_cis-driven`,
                         "cis-driven" = dd$`Cis-driven`,
-                        "not classified" = dd$`Too_Many_mQTL` # ot modelled: No isQTL with MAF 001, no isQTL with var, no isQTL with no dependance
+                        "not classified" = dd$`Too_Many_mQTL` # not modelled
 ) 
 
 ### dotplot ####
@@ -153,7 +144,7 @@ ggplot(data = d1[d1$variable %in% c('perc_cis_driven_2'),],
         strip.background = element_rect(fill="#B3B3B3"),
         legend.position = "none") 
 dev.off()
-#ggsave('~/marenostrum/Projects/GTEx_v8/Methylation/Plots/cis_driven_DMPs_dotplot.pdf', plot = p1, width = 4, height = 5)
+
 # % of DMPs with cis-mQTLs
 dmps <- sapply(tissues, function(tissue) length(DMP[[tissue]]))
 dd$DMPs <- dmps
@@ -204,17 +195,9 @@ deg_sharing$Type <- 'Not mCpG'
 deg_sharing$Type[deg_sharing$CG %in% unique(res_all$deg)] <- 'Not Cis-driven'
 deg_sharing$Type[deg_sharing$CG %in% cis_driven] <- 'Cis-driven'
 
-### Plot jitter for trait specific results #####
-# to_plot$type <- 'Hyper'
-# to_plot$type[to_plot$dir==-1] <- 'Hypo'
-
 colors <- c('#A39A92','#9C731C','#5F0F40')
-# to_plot$label <- 'No'
-# to_plot$label[to_plot$number >= 7] <- 'Yes'
 
 library(ggrepel)
-#pdf('~/marenostrum/Projects/GTEx_v8/Methylation/Plots/tissue_sharing_ancestry_violin.pdf', width = 3, height = 3)
-#png('~/marenostrum/Projects/GTEx_v8/Methylation/Plots/tissue_sharing_ancestry_violin.png', width = 900, height = 700, res = 300)
 
 my_comparisons <- list( c("Cis-driven", "Not Cis-driven"), c("Not Cis-driven", "Not mCpG"), c("Cis-driven", "Not mCpG") )
 library(ggpubr)
@@ -603,12 +586,7 @@ for (type in c("Enh","EnhBiv","Het","Quies","ReprPC","TSS","TssBiv","Tx","ZNF/Rp
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
           panel.border = element_rect(colour = "black", linewidth=1)) #+
-  # scale_y_discrete(breaks=c("Enh","EnhBiv","Het","Quies","ReprPC","TSS","TssBiv","Tx","ZNF/Rpts"),
-  #                  labels=c("Enhancer","Enhancer Bivalent","Heterochromatin","Quiescent","Repressed Polycomb","TSS","TSS Bivalent","Transcription","ZNF & Repeats"))# + xlim(0, 3)
-  # pdf(file = paste0("~/marenostrum/Projects/GTEx_v8/Methylation/Plots/chromhmm/genomic_location_", gsub('\\/','_',type),'_',trait,".pdf"), w = 6, h = 3.5)
-  # print(g)
-  # dev.off()
-  
+
   #Plot sample sizes:
   
   g2 <- ggplot(hyper_hypo) + geom_col(aes(sample_size, tissue, fill=type), width = 0.6) +
@@ -619,12 +597,7 @@ for (type in c("Enh","EnhBiv","Het","Quies","ReprPC","TSS","TssBiv","Tx","ZNF/Rp
           axis.text.y=element_blank(),  #remove y axis labels,
           axis.title.x = element_text(size=16)) +
     scale_x_continuous(n.breaks=3)
-  #   scale_y_discrete(breaks=c("Enh","EnhBiv","Het","Quies","ReprPC","TSS","TssBiv","Tx","ZNF/Rpts"),
-  #                    labels=c("Enhancer","Enhancer Bivalent","Heterochromatin","Quiescent","Repressed Polycomb","TSS","TSS Bivalent","Transcription","ZNF & Repeats")) #+
-  # #scale_x_continuous(breaks=c(0, 20000, 40000)) #Only for lung
-  # pdf(file = paste0("~/marenostrum/Projects/GTEx_v8/Methylation/Plots/chromhmm/genomic_location_", gsub('\\/','_',type),'_',trait,"_sample_size.pdf"), w = 4, h = 3.5)
-  # print(g2)
-  # dev.off()
+
   
   p <- ggarrange(g, g2, labels = c("A", "B"),
                  common.legend = TRUE, legend = "right", widths = c(0.8,0.3))
@@ -701,9 +674,6 @@ g <- ggplot(hyper_all, aes(x=(oddsRatio), y=tissue, colour=sig)) +
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(colour = "black", linewidth=1))
-# pdf(file = paste0("~/marenostrum/Projects/GTEx_v8/Methylation/Ovary_menopause/genomic_location_", tissue,'_',trait,".pdf"), w = 6, h = 3.5)
-# print(g)
-# dev.off()
 
 #Plot sample sizes:
 
