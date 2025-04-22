@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
-# @Author: Jose Miguel Ramirez and Raquel Garcia-Perez; Adapted by Winona Oliveros
-# @E-mail: jose.ramirez1@bsc.es
+# @Author: Jose Miguel Ramirez; Adapted by Winona Oliveros
+# @E-mail: winona.oliveros@bsc.es
 # @Description: Code to Plor correlation results; general overview
 # @software version: R=4.2.2
 
@@ -139,7 +139,6 @@ get_corr <- function(tissue, trait){
     NA
   }else{
     model <- readRDS(paste0(project_path, "Tissues/",tissue, "/",trait,'_Correlations_probes_genes_DEG_DMP.rds'))
-    #rownames(model[[trait]][model[[trait]]$adj.P.Val<0.05,])
     model[model$p.adj<0.05,]
   }
 }
@@ -152,27 +151,12 @@ get_pairs <- function(tissue, trait){
     NA
   }else{
     model <- readRDS(paste0(project_path, "Tissues/",tissue, "/",trait,'_Correlations_probes_genes_DEG_DMP.rds'))
-    #rownames(model[[trait]][model[[trait]]$adj.P.Val<0.05,])
     model[!is.na(model$gene),]
   }
 }
 DMPs_DEGs <- lapply(c('EURv1','SEX2','AGE','BMI'), function(trait) lapply(tissues, function(tissue) get_pairs(tissue, trait)))
 names(DMPs_DEGs) <- c("Ancestry", "Sex", "Age", "BMI")
 for(trait in c("Ancestry", "Sex", "Age", "BMI")){names(DMPs_DEGs[[trait]]) <- tissues}
-
-# 
-# get_DMPs <- function(tissue, trait){
-#   if(tissue %in% sex_tissues & trait == "SEX2"){
-#     NA
-#   }else{
-#     model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_5_PEERs_continous.rds"))
-#     rownames(model[[trait]][model[[trait]]$adj.P.Val<0.05,])
-#     #model
-#   }
-# }
-# DMPs <- lapply(c('EURv1','SEX2','AGE','BMI'), function(trait) lapply(tissues, function(tissue) get_DMPs(tissue, trait)))
-# names(DMPs) <- c("Ancestry", "Sex", "Age", "BMI")
-# for(trait in c("Ancestry", "Sex", "Age", "BMI")){names(DMPs[[trait]]) <- tissues}
 
 
 metadata <- lapply(tissues, function(tissue) {
@@ -304,87 +288,3 @@ pdf("marenostrum/Projects/GTEx_v8/Methylation/Plots/Perc_corr_DMPs_DEGs_heatmap.
 draw(ht)
     # heatmap_legend_side = "bottom")
 dev.off()
-
-### now subset DMPs
-# counts <- sapply(c("Ancestry", "Sex", "Age", "BMI"), function(trait)
-#   sapply(tissues, function(tissue) 
-#     if (tissue %in% sex_tissues & trait=='Sex') {
-#       NA
-#     } else {
-#     sum(DMPs_cor[[trait]][[tissue]]$probe %in% DMPs[[trait]][[tissue]]) }
-#   ))
-# 
-# head(counts)
-# # counts[(counts)=='NULL'] <- NA
-#  without_NA <- replace(counts, is.na(counts), "")
-# # counts_num <- matrix(as.numeric(counts),    # Convert to numeric matrix
-# #                      ncol = ncol(counts))
-# # rownames(counts_num) <- tissue_info$tissue_abbrv
-# # colnames(counts_num) <- c('Ancestry','Sex','Age','BMI')
-# ht <- Heatmap((counts),
-#               col= colorRamp2(seq(0,300,length.out=9),
-#                               (brewer.pal(9, "BuPu"))),
-#               # col=colorRamp2( c(0,1,3000),
-#               #                 c("white","#F5F8FC","#1266b5") ),
-#               na_col = "white",
-#               cluster_rows = F,
-#               cluster_columns = F,
-#               # name = "DE signal",
-#               name = "#corr probes",
-#               row_names_side = "left",
-#               column_names_side = "top",
-#               column_names_rot =  60,
-#               column_names_gp = gpar(fontsize = 12),
-#               column_names_max_height= unit(9, "cm"),
-#               row_names_gp = gpar(fontsize = 12),
-#               left_annotation = row_ha_left,
-#               cell_fun = function(j, i, x, y, width, height, fill) {
-#                 grid.text(my_pretty_num_function(without_NA[i, j]), x, y, gp = gpar(fontsize = 12))}
-#               
-# )
-
-
-
-
-#Old, I did enrichments and nothing really poped up
-
-# library(missMethyl)
-# library(ggplot2)
-# plot_go <- function(go, direction){
-#   go <- go[go$ONTOLOGY=="BP",] #Only BP
-#   sig <- sum(go$FDR<0.05)
-#   print(sig)
-#   if(sig>20){
-#     max<-20
-#   } else{max<-sig}
-#   topgo <- topGSA(go, max)
-#   ggplot(data = topgo, aes(x=DE/N, y = factor(TERM, levels=rev(TERM)),
-#                            color = FDR, size = DE)) +
-#     geom_point() +
-#     scale_color_gradient(low = "red", high = "blue") +
-#     theme_bw() + ylab("") + xlab("Gene Ratio") +
-#     ggtitle(paste0("GO ", direction, " BP"))
-# }
-#
-# # go_pro <- gometh(sig.cpg=pro$probe, all.cpg = annotation$IlmnID, collection="GO", array.type="EPIC")
-# go_pro <- gometh(sig.cpg=pro$probe, all.cpg = cor$probe[cor$class=="promoter"], collection="GO", array.type="EPIC")
-# sum(go_pro$FDR<0.05)
-# plot_go(go_pro, "promoters")
-#
-# # go_pro <- gometh(sig.cpg=enh$probe, all.cpg = annotation$IlmnID, collection="GO", array.type="EPIC")
-# go_pro <- gometh(sig.cpg=enh$probe, all.cpg = cor$probe[cor$class=="enhancer"], collection="GO", array.type="EPIC")
-# sum(go_pro$FDR<0.05)
-# plot_go(go_pro, "enhancers")
-#
-# # go_pro <- gometh(sig.cpg=body$probe, all.cpg = annotation$IlmnID, collection="GO", array.type="EPIC")
-# go_pro <- gometh(sig.cpg=body$probe, all.cpg = cor$probe[cor$class=="gene_body"], collection="GO", array.type="EPIC")
-# sum(go_pro$FDR<0.05)
-# plot_go(go_pro, "gene body")
-#
-# # go_pro <- gometh(sig.cpg=other$probe, all.cpg = annotation$IlmnID, collection="GO", array.type="EPIC")
-# go_pro <- gometh(sig.cpg=other$probe, all.cpg = cor$probe[cor$class=="other"], collection="GO", array.type="EPIC")
-# sum(go_pro$FDR<0.05)
-# plot_go(go_pro, "other")
-#
-# #No enrichments
-

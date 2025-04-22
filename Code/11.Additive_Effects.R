@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros
+# @E-mail: winona.oliveros@bsc.es
+# @Description: Code to get additive effects between demographic traits
+# @software version: R=4.2.2
+
 ##########################################
 #### Additive effects ####################
 ##########################################
@@ -37,16 +43,13 @@ sex_tissues <- c('Ovary','Prostate','Testis')
 
 tissues <- tissue_info$tissue_ID
 
-# Differential expression analyses: results tables ----
-# for(tissue in tissues){
-#   if(!file.exists(paste0("~/GTEx_v8/Raquel/03_DEA/01.DEA/Tissues/",tissue,"/", tissue,".voom_limma.covariates_and_traits.results.rds"))){print(tissue)}
-# }
+# Differential methylation analyses: results tables ----
+
 get_DMPs <- function(tissue, trait){
   if(tissue %in% sex_tissues & trait == "SEX2"){
     NA
   }else{
     model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_5_PEERs_continous.rds"))[[trait]]
-    #rownames(model[[trait]][model[[trait]]$adj.P.Val<0.05,])
     model
   }
 }
@@ -55,7 +58,7 @@ names(DMPs_Res) <- c("Ancestry", "Sex", "Age", "BMI")
 for(trait in c("Ancestry", "Sex", "Age", "BMI")){names(DMPs_Res[[trait]]) <- tissues}
 
 
-# Lists of DEGs ----
+# Lists of DMPs ----
 get_DMPs <- function(tissue, trait){
   if(tissue %in% sex_tissues & trait == "Sex"){
     NA
@@ -67,13 +70,11 @@ DMPs <- lapply(tissues, function(tissue) lapply(c("Ancestry", "Sex", "Age", "BMI
 names(DMPs) <- tissues
 for(trait in tissues){names(DMPs[[trait]]) <- c("Ancestry", "Sex", "Age", "BMI")}
 
-# Read tissue sharing? ----
-
 
 # ---- Analysis ----- ####
 
 # 1. Overlap between pairwise combinations of traits ----
-# Genes expressed per tissue --
+
 tested_cpgs <- lapply(tissues, function(tissue) rownames(DMPs_Res[['Age']][[tissue]]))
 names(tested_cpgs) <- tissues
 
@@ -87,7 +88,7 @@ pw.traits <- c("Age:Ancestry",
                
 )
 
-# List of DEGs per tissue
+# List of DMPs per tissue
 deg.pw.traits <- lapply(pw.traits, function(pw)
   lapply(tissues, function(tissue) 
     intersect(DMPs[[tissue]][[unlist(strsplit(pw, split = ":"))[[1]]]], DMPs[[tissue]][[unlist(strsplit(pw, split = ":"))[[2]]]])
@@ -100,7 +101,7 @@ for(pw in pw.traits){
 
 length(unique(unlist(lapply(names(deg.pw.traits), function(pw) unique(unlist(deg.pw.traits[[pw]]))))))
 
-# Number of DEGs
+# Number of DMPs
 number_of_DEGs <- sapply(pw.traits, function(pw) 
   sapply(tissues, function(tissue)
     length(deg.pw.traits[[pw]][[tissue]])
@@ -130,13 +131,13 @@ row_ha_left <- HeatmapAnnotation("Tissues" = rownames(number_of_DEGs),
                                  simple_anno_size = unit(0.3,"cm"),
                                  which = "row")
 
-colnames(number_of_DEGs) <- c("Ancestry-age DEGs",
-                              "Ancestry-sex DEGs",
-                              "Sex-age DEGs",
-                              "Sex-BMI DEGs",
-                              "Ancestry-BMI DEGs",
-                              "Age-BMI DEGs")
-column_ha_top <- HeatmapAnnotation("Number of DEGs" = anno_barplot(total_unique_pw_DEGs,
+colnames(number_of_DEGs) <- c("Ancestry-age DMPs",
+                              "Ancestry-sex DMPs",
+                              "Sex-age DMPs",
+                              "Sex-BMI DMPs",
+                              "Ancestry-BMI DMPs",
+                              "Age-BMI DMPs")
+column_ha_top <- HeatmapAnnotation("Number of DMPs" = anno_barplot(total_unique_pw_DEGs,
                                                                    gp = gpar(fill = "light gray",
                                                                              col = "light gray"),
                                                                    border = F),
@@ -172,33 +173,15 @@ ht <- Heatmap(apply(number_of_DEGs, 2, function(x) x/sum(x)),
               heatmap_legend_param = list(direction = "horizontal"))
 
 
-
-# dir.create("~/GTEx_v8/Raquel/Draft/Analysis/expression/additive_effects_are_widespread_and_tissue_specific/figures/", recursive = T)
-# pdf("~/GTEx_v8/Raquel/Draft/Analysis/expression/additive_effects_are_widespread_and_tissue_specific/figures/Figure_3D.number_of_genes_DE_with_2_traits.pdf",
-#     width = 4.5, height = 5.5)
-# draw(ht)
-# dev.off()
-# 
-# rownames(number_of_DEGs) <- tissue_info$tissue_ID
-# dir.create("~/GTEx_v8/Raquel/Draft/Analysis/expression/additive_effects_are_widespread_and_tissue_specific/supplementary_tables/", recursive = T)
-# write.table(number_of_DEGs,
-#             "~/GTEx_v8/Raquel/Draft/Analysis/expression/additive_effects_are_widespread_and_tissue_specific/supplementary_tables/number_of_DEGs_2_traits.tab",
-#             col.names = T, row.names = T, 
-#             quote = F, sep = "\t")
-
-
-# Fisher's exact test to test if there are more DEGs with 2 traits than expected ----
+# Fisher's exact test to test if there are more DMPs with 2 traits than expected ----
 overlap.enrichment.fun <- function(tissue, trait.1, trait.2){
   if(tissue %in% sex_tissues & (trait.1 == "Sex" | trait.2 == "Sex")){
     return(list("overlap" = NA,
                 "odds.ratio" = NA,
                 "p.value" = NA))
   }else{
-    #                   de.trait.2  not.de.trait.2
-    # de.trait.1
-    # not.de.trait.1
+ 
     x11 <- length(intersect(DMPs[[tissue]][[trait.1]], DMPs[[tissue]][[trait.2]]))
-    #x11 <- length(deg.pw.traits[[paste0(trait.1,":", trait.2)]][[tissue]])
     x12 <- length(DMPs[[tissue]][[trait.1]][! DMPs[[tissue]][[trait.1]] %in% DMPs[[tissue]][[trait.2]]])
     x21 <- length(DMPs[[tissue]][[trait.2]][! DMPs[[tissue]][[trait.2]] %in% DMPs[[tissue]][[trait.1]]])
     x22 <- length(tested_cpgs[[tissue]][! tested_cpgs[[tissue]] %in% unique(c(DMPs[[tissue]][[trait.1]], DMPs[[tissue]][[trait.2]]))])
@@ -225,7 +208,6 @@ fisher.results <- lapply(pw.traits, function(pw)
   ))
 names(fisher.results) <- pw.traits
 for(pw in pw.traits){names(fisher.results[[pw]]) <- tissues}
-#fisher.results$`Ancestry:BMI`$WholeBlood$counts.matrix
 
 # Enrichment statistics --
 p.value <- sapply(pw.traits, function(pw)
@@ -244,7 +226,7 @@ adjPVal_matrix <- matrix(adj_p_values,
                          nrow = length(tissues), ncol = length(pw.traits),
                          byrow = F)
 
-# Number of DEGs in overlap --
+# Number of DMPs in overlap --
 overlap <- sapply(pw.traits, function(pw)
   sapply(tissues, function(tissue) 
     fisher.results[[pw]][[tissue]][["overlap"]]
@@ -267,15 +249,13 @@ range(log2_OR, na.rm = T)
 col_fun <- colorRamp2(seq(0,3,length.out=9),
                       (brewer.pal(9, "Reds")))
 
-#log2_OR[log2_OR==0] <- NA
-#number_of_DEGs <- number_of_DEGs[,pw.traits[c(1,4,3,2,5,6)]]
-#number_of_DEGs[number_of_DEGs==0] <- ""
-colnames(log2_OR) <- c("Ancestry-age DEGs",
-                       "Ancestry-sex DEGs",
-                       "Sex-age DEGs",
-                       "Sex-BMI DEGs",
-                       "Ancestry-BMI DEGs",
-                       "Age-BMI DEGs")
+
+colnames(log2_OR) <- c("Ancestry-age DMPs",
+                       "Ancestry-sex DMPs",
+                       "Sex-age DMPs",
+                       "Sex-BMI DMPs",
+                       "Ancestry-BMI DMPs",
+                       "Age-BMI DMPs")
 rownames(log2_OR) <- tissue_info$tissue_abbrv
 tissues_cols <- tissue_info$colcodes 
 names(tissues_cols) <- tissue_info$tissue_abbrv
@@ -335,7 +315,7 @@ for(i in 1:nrow(log10_fdr_sign)){
     }
   }
 }
-#log10_fdr_sign[log2_OR<0] <-log10_fdr_sign*-1 
+
 col_fun <- colorRamp2(seq(0,70,length.out=9),
                       (brewer.pal(9, "Reds")))
 rownames(log10_fdr_sign) <- tissue_info$tissue_abbrv
@@ -410,7 +390,7 @@ ggplot(data) +
                         high=brewer.pal(9,"Reds")[[8]], midpoint = 3.5) +
   geom_vline(xintercept = 1, lty = 2) +
   labs(colour="-log10(FDR)",
-       size = "Number of DEGs") + 
+       size = "Number of DMPs") + 
   ylab("") + xlab("Odds ratio") +
   facet_grid(Traits~.,
              scales = "free_y",
@@ -420,59 +400,7 @@ ggplot(data) +
   )  +
   theme(legend.position="bottom")
 
-# Row annotation --
-# tissue_cols <- tissue_info$colcodes
-# names(tissue_cols) <- tissue_info$tissue_abbrv
-# traits_cols
-# row_ha_left <- HeatmapAnnotation("Tissues" = rev(data$Tissue),
-#                                  "Variable1" = rev(sapply(as.character(data$Traits), function(i) unlist(strsplit(i, split = ":"))[[1]])),
-#                                  "Variable2" = rev(sapply(as.character(data$Traits), function(i) unlist(strsplit(i, split = ":"))[[2]])),
-#                                  col = list("Tissues" = tissue_cols,
-#                                             "Variable1" = traits_cols,
-#                                             "Variable2" = traits_cols),
-#                                  gap = unit(0, "cm"),
-#                                  simple_anno_size = unit(0.25,"cm"),
-#                                  show_legend = F, 
-#                                  show_annotation_name = T,
-#                                  annotation_name_rot = 90,
-#                                  annotation_name_gp = gpar(fontsize = 10),
-#                                  which = "row")
-# 
-# Heatmap(as.matrix(rep(1, nrow(data))),
-#         left_annotation = row_ha_left
-# )
-# data$class <- ifelse(data$OR>5, 2,1)
-# ggplot(data) + 
-#   geom_point(aes(x=OR, y = factor(y_dummy),
-#                  col = FDR_bounded,
-#                  size = as.numeric(Overlap))) +
-#   # geom_errorbar(aes(y = factor(y_dummy),
-#   #                   xmin=lower_CI,
-#   #                   xmax=upper_CI,
-#   #                   col = Tissue)) +
-#   theme_minimal() +
-#   #scale_color_manual(values = brewer.pal(11,"RdBu")) +
-#   scale_color_gradient2(low=brewer.pal(11,"RdBu")[[10]], 
-#                         mid=brewer.pal(11,"RdBu")[[6]],
-#                         high=brewer.pal(11,"RdBu")[[2]]) +
-#   geom_vline(xintercept = 1, lty = 2) +
-#   ylab("")
-# #facet_grid(~factor(class), scales = "free") 
-# 
-# variables_cols <- brewer.pal(12, "Paired")[c(2,4,6,8,10,12)]
-# names(variables_cols) <- pw.traits
-# row_ha <- HeatmapAnnotation("Variables" = as.character(data$Traits),
-#                             "Tissue" = as.character(data$Tissue),
-#                             col = list("Variables" =  variables_cols,
-#                                        "Tissue" = tissue_cols),
-#                             show_legend = T, 
-#                             show_annotation_name = F,
-#                             simple_anno_size = unit(0.3,"cm"),
-#                             which =  "row"
-# )
-# Heatmap(as.matrix(as.numeric(data$Overlap)),
-#         left_annotation = row_ha,
-#         cluster_rows = F)
+
 
 data$y_dummy <- factor(data$y_dummy, levels = rev(paste0(data$Tissue, "_", data$Traits)), order = T)
 ggplot(data) + 
@@ -497,97 +425,5 @@ data$FDR_bounded <- ifelse(is.na(data$FDR), NA,
 data$Traits <- factor(data$Traits, levels = pw.traits, order = T)
 
 
-# 1.2 Dot plots showing the results of overlap enrichment analysis ----
-# Original FDR values --
-# pdf("~/GTEx_v8/Raquel/Draft/Figures/Draft/Exprs.03.OverlapBetweenTraits.real_fdr.Dot_plots.pdf",
-#     width = 8, height = 9)
-# p1 <- ggplot(data) +
-#   geom_point(aes(x=Traits,
-#                  y=Tissue,
-#                  size = abs(OddsRatio),
-#                  col = FDR)) +
-#   theme_minimal() + 
-#   geom_text(data=data, aes( x=Traits, y=Tissue, label=Overlap),                 
-#             color="black", 
-#             size=3, angle=0) +
-#   scale_color_gradient2(low=brewer.pal(11,"RdBu")[[10]], 
-#                         mid=brewer.pal(11,"RdBu")[[6]],
-#                         high=brewer.pal(11,"RdBu")[[2]]) +
-#   xlab("") + ylab("") +
-#   labs(size="log2(Odds ratio)") + labs(col="-log10(FDR)") +
-#   theme(axis.text.x = element_text(angle=45, hjust = 1))
-# #dev.off()
-# # dir.create("~/GTEx_v8/Raquel/Draft/Draft/Exprs.OverlapBetweenTraits/Figures/", recursive = T)
-# # pdf("~/GTEx_v8/Raquel/Draft/Draft/Exprs.OverlapBetweenTraits/Figures/Exprs.OverlapBetweenTraits.Dot_plots.pdf",
-# #     width = 6, height = 9)
-# p2 <- ggplot(data) +
-#   geom_point(aes(x=Traits,
-#                  y=Tissue,
-#                  size = abs(OddsRatio),
-#                  col = FDR_bounded)) +
-#   theme_minimal() + 
-#   geom_text(data=data, aes( x=Traits, y=Tissue, label=Overlap),                 
-#             color="black", 
-#             size=3, angle=0) +
-#   scale_color_gradient2(low=brewer.pal(11,"RdBu")[[10]], 
-#                         mid=brewer.pal(11,"RdBu")[[6]],
-#                         high=brewer.pal(11,"RdBu")[[2]]) +
-#   xlab("") + ylab("") +
-#   labs(size="log2(Odds ratio)") + labs(col="-log10(FDR)") +
-#   theme(axis.text.x = element_text(angle=45, hjust = 1))
-# #dev.off()
-# p2
-# 
-# p2p <-
-#   p2 <- ggplot(data) +
-#   geom_point(aes(x=Traits,
-#                  y=Tissue,
-#                  size = abs(OddsRatio),
-#                  col = FDR_bounded)) +
-#   theme_minimal() + 
-#   # geom_text(data=data, aes( x=Traits, y=Tissue, label=Overlap),                 
-#   #           color="black", 
-#   #           size=3, angle=0) +
-#   scale_color_gradient2(low=brewer.pal(11,"RdBu")[[10]], 
-#                         mid=brewer.pal(11,"RdBu")[[6]],
-#                         high=brewer.pal(11,"RdBu")[[2]]) +
-#   xlab("") + ylab("") +
-#   labs(size="log2(Odds ratio)") + labs(col="-log10(FDR)") +
-#   theme(axis.text.x = element_text(angle=45, hjust = 1))
-# p2p
-
-# p3 <- ggplot(data) +
-#   geom_point(aes(x=Traits,
-#                  y=Tissue,
-#                  col = OddsRatio,
-#                  size = abs(FDR))) +
-#   theme_minimal() + 
-#   geom_text(data=data, aes( x=Traits, y=Tissue, label=Overlap),                 
-#             color="black", 
-#             size=3, angle=0) +
-#   scale_color_gradient2(low=brewer.pal(11,"RdBu")[[10]], 
-#                         mid=brewer.pal(11,"RdBu")[[6]],
-#                         high=brewer.pal(11,"RdBu")[[2]]) +
-#   xlab("") + ylab("") +
-#   labs(size="-log10(FDR)") + labs(col="log2(Odds ratio)") +
-#   theme(axis.text.x = element_text(angle=45, hjust = 1))
-# 
-# p4 <- ggplot(data) +
-#   geom_point(aes(x=Traits,
-#                  y=Tissue,
-#                  col = OddsRatio,
-#                  size = abs(FDR_bounded))) +
-#   theme_minimal() + 
-#   geom_text(data=data, aes( x=Traits, y=Tissue, label=Overlap),                 
-#             color="black", 
-#             size=3, angle=0) +
-#   scale_color_gradient2(low=brewer.pal(11,"RdBu")[[10]], 
-#                         mid=brewer.pal(11,"RdBu")[[6]],
-#                         high=brewer.pal(11,"RdBu")[[2]]) +
-#   xlab("") + ylab("") +
-#   labs(size="-log10(FDR)") + labs(col="log2(Odds ratio)") +
-#   theme(axis.text.x = element_text(angle=45, hjust = 1))
-# 
-# grid.arrange(p1, p2, p3, p4, ncol = 4)
 
 saveRDS(data, "~/marenostrum/Projects/GTEx_v8/Methylation/Data/03.OverlapBetweenVariables.Fisher_results.rds")

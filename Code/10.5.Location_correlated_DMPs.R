@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros
+# @E-mail: winona.oliveros@bsc.es
+# @Description: Code to perform enrichment correlations EPIC annotation
+# @software version: R=4.2.2
+
 ### Location ####
 # ---- Data ----- ####
 # Demographic traits ----
@@ -55,7 +61,7 @@ get_corr <- function(tissue, trait){
   }else{
     model <- readRDS(paste0(project_path, "Tissues/",tissue, "/",trait,'_Correlations_probes_genes_DEG_DMP.rds'))
     #rownames(model[[trait]][model[[trait]]$adj.P.Val<0.05,])
-    #model[model$p.adj<0.05,]
+    model[model$p.adj<0.05,]
   }
 }
 DMPs_cor <- lapply(c('EURv1','SEX2','AGE','BMI'), function(trait) lapply(tissues, function(tissue) get_corr(tissue, trait)))

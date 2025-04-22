@@ -1,4 +1,10 @@
 #!/usr/bin/env Rscript
+# @Author: Winona Oliveros
+# @E-mail: winona.oliveros@bsc.es
+# @Description: Code to get additive effects between demographic traits, test if there is a bias
+# @software version: R=4.2.2
+
+#!/usr/bin/env Rscript
 
 # Libraries ----
 library(ComplexHeatmap)
@@ -67,16 +73,13 @@ boxplot(mdata$BMI ~ mdata$EURv1)
 cor(mdata$BMI,mdata$EURv1)
 
 
-# Differential expression analyses: results tables ----
-# for(tissue in tissues){
-#   if(!file.exists(paste0("~/GTEx_v8/Raquel/03_DEA/01.DEA/Tissues/",tissue,"/", tissue,".voom_limma.covariates_and_traits.results.rds"))){print(tissue)}
-# }
+# Differential methylation analyses: results tables ----
+
 get_DMPs <- function(tissue, trait){
   if(tissue %in% sex_tissues & trait == "SEX2"){
     NA
   }else{
     model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_5_PEERs_continous.rds"))[[trait]]
-    #rownames(model[[trait]][model[[trait]]$adj.P.Val<0.05,])
     model
   }
 }
@@ -85,7 +88,7 @@ names(DMPs_Res) <- c("Ancestry", "Sex", "Age", "BMI")
 for(trait in c("Ancestry", "Sex", "Age", "BMI")){names(DMPs_Res[[trait]]) <- tissues}
 
 
-# Lists of DEGs ----
+# Lists of DMPs ----
 get_DMPs <- function(tissue, trait){
   if(tissue %in% sex_tissues & trait == "Sex"){
     NA
@@ -168,7 +171,7 @@ Heatmap(as.matrix(correlation_matrix),
         cluster_columns = F)
 dev.off()
 
-# Are there tissue:pairwise combinations with more DEGs with 2 traits than expected in a particular direction ----
+# Are there tissue:pairwise combinations with more DMPs with 2 traits than expected in a particular direction ----
 # Tested only if at least 20 genes overlap
 
 # Is there a bias towards a particular direction of change --
@@ -179,7 +182,7 @@ Xsq_fun <- function(tissue, trait1, trait2){
                 "O/E" = rep(NA, 4),
                 "counts" = rep(NA, 4)))
   }else{
-    # Do we observe a higher than expected overlap of DEGs in a particular direction of change?
+    # Do we observe a higher than expected overlap of DMPs in a particular direction of change?
     # a numeric vector representing the observed proportions
     # a vector of probabilities (of the same length of the observed proportions) representing the expected proportions
     trait1.up <- rownames(DMPs_Res[[trait1]][[tissue]][DMPs_Res[[trait1]][[tissue]]$adj.P.Val < 0.05 &
@@ -208,7 +211,7 @@ Xsq_fun <- function(tissue, trait1, trait2){
     
     # Return results
     if(sum(counts) < 20){
-      print(paste0(tissue, ": Fewer than 20 genes DE with ", trait1, " and ", trait2))
+      print(paste0(tissue, ": Fewer than 20 genes DM with ", trait1, " and ", trait2))
       return(list("P-value" = NA,
                   "O/E" = rep(NA, 4),
                   "counts" = counts))
@@ -268,12 +271,12 @@ range(fdr, na.rm=T)
 # tissues and combinations with fdr < 0.05
 col_fun <- colorRamp2(seq(-log10(0.05),200,length.out=9),
                       brewer.pal(9, "Reds"))
-colnames(fdr) <- c("Ancestry-sex DEGs",
-                   "Ancestry-age DEGs",
-                   "Ancestry-BMI DEGs",
-                   "Sex-age DEGs",
-                   "Sex-BMI DEGs",
-                   "Age-BMI DEGs")
+colnames(fdr) <- c("Ancestry-sex DMPs",
+                   "Ancestry-age DMPs",
+                   "Ancestry-BMI DMPs",
+                   "Sex-age DMPs",
+                   "Sex-BMI DMPs",
+                   "Age-BMI DMPs")
 # row annotation
 row_ha_left <-  HeatmapAnnotation("Tissues" = rownames(fdr),
                                   col = list("Tissues" = tissues_cols),
@@ -339,7 +342,7 @@ odds_ratio <- lapply(pw_traits, function(pw)
 )
 names(odds_ratio) <- pw_traits  
 
-# number of DEGs 
+# number of DMPs 
 number_of_DEGs <- lapply(pw_traits, function(pw)
   t(sapply(tissues, function(tissue) 
     Xsq_results[[pw]][[tissue]][["counts"]]
@@ -453,7 +456,7 @@ ordered_columns <- list(
 pw_colnames <- as.list(colnames(fdr))
 names(pw_colnames) <- pw_traits
 
-# ancestry-sex DEGs  ----
+# ancestry-sex DMPs  ----
 pw <- "Ancestry:Sex"    
 pw_colname <- pw_colnames[[pw]]
 # male - young # down-down
@@ -469,7 +472,7 @@ range(m, na.rm=T)
 col_fun <- colorRamp2(seq(-2,2,length.out=11),
                       rev(brewer.pal(11, "RdBu")))
 
-# number of DEGs (cell value)
+# number of DMPs (cell value)
 m_anno <- number_of_DEGs[[pw]][]
 m_anno <- matrix(as.character(m_anno),
                  nrow = length(tissues),
@@ -540,207 +543,10 @@ ht <- Heatmap(m,
               
 )
 
-# pdf(paste0(outpath, pw, "_DEGs.chi_square_heatmap.pdf"),
-#     width = 3, height = 5)
 draw(ht,
      heatmap_legend_side = "bottom",
      column_title = pw_colnames[[pw]],
      column_title_gp = gpar(fontsize = 10))
-# dev.off()
-
-
-
-
-# ancestry-age DEGs  ----
-pw <- "Ancestry:Age"    
-pw_colname <- pw_colnames[[pw]]
-# male - young # down-down
-# male - old # down-up
-# female - young # up - down
-# female - old # up-up
-
-# observed vs expected ratio (cell color)
-m <- odds_ratio[[pw]][]
-colnames(m) <- ordered_columns[[pw]]
-rownames(m) <- tissue_info$tissue_abbrv
-range(m, na.rm=T)
-col_fun <- colorRamp2(seq(-2,2,length.out=11),
-                      rev(brewer.pal(11, "RdBu")))
-
-# number of DEGs (cell value)
-m_anno <- number_of_DEGs[[pw]][]
-m_anno <- matrix(as.character(m_anno),
-                 nrow = length(tissues),
-                 ncol = 4,
-                 byrow = F)
-m_anno[m_anno == "0"] <- ""
-colnames(m_anno) <- ordered_columns[[pw]]
-rownames(m_anno) <- tissue_info$tissue_abbrv
-
-# fdr (row annotation)
-m_fdr <- fdr[rownames(fdr[!is.na(fdr[,pw_colname]) & fdr[,pw_colname]>0,]),pw_colname] # NA: not test; 0: not significant
-range(m_fdr, na.rm = T)
-col_fun_fdr <-  colorRamp2(c(0, seq(-log10(0.05), max(m_fdr, na.rm=T), length.out=9)),
-                           c("white", brewer.pal(9, "Reds")))
-
-m <- m[rownames(fdr[!is.na(fdr[,pw_colname]) & fdr[,pw_colname]>0,]),]
-m_anno <- m_anno[rownames(fdr[!is.na(fdr[,pw_colname]) & fdr[,pw_colname]>0,]),]
-
-# row annotation
-row_ha_left <-  HeatmapAnnotation("Tissues" = rownames(m),
-                                  "FDR" = m_fdr,
-                                  col = list("Tissues" = tissues_cols,
-                                             "FDR" = col_fun_fdr),
-                                  show_legend = F, 
-                                  show_annotation_name = T,
-                                  simple_anno_size = unit(0.3,"cm"),
-                                  annotation_name_gp =  gpar(fontsize = 9),
-                                  which = "row")
-# column annotation
-cols <- c("EUR" = alpha(traits_cols["Ancestry"], 0.5),
-          "AFR" = traits_cols["Ancestry"],
-          "young" = alpha(traits_cols["Age"], 0.5),
-          "old" = traits_cols["Age"])
-names(cols) <- c("EUR", "AFR", "young", "old")
-
-m_top_bar <- rbind.data.frame(apply(m, 2, function(x) sum(x<0, na.rm=T)),
-                              apply(m, 2, function(x) sum(x>0, na.rm=T))
-)
-column_top_anno <- HeatmapAnnotation("Age" = sapply(colnames(m), function(i) unlist(strsplit(i, split = " - "))[[2]]),
-                                     "Ancestry" = sapply(colnames(m), function(i) unlist(strsplit(i, split = " - "))[[1]]), 
-                                     "number of tissues" =  anno_barplot(t(m_top_bar),
-                                                                         gp = gpar(fill = brewer.pal(11, "RdBu")[c(10,2)],
-                                                                                   col = brewer.pal(11, "RdBu")[c(10,2)])),
-                                     col = list("Age" = cols,
-                                                "Ancestry" = cols),
-                                     show_legend = T, 
-                                     show_annotation_name = T,
-                                     simple_anno_size = unit(0.3,"cm"),
-                                     annotation_name_gp =  gpar(fontsize = 9)
-)
-# heatmap
-ht <- Heatmap(m,
-              col = col_fun,
-              na_col = "white",
-              cluster_rows = F,
-              cluster_columns = F,
-              name = "log2(O/E)",
-              row_names_side = "left",
-              column_names_side = "top",
-              column_names_rot =  45,
-              top_annotation = column_top_anno,
-              left_annotation = row_ha_left,
-              row_names_gp = gpar(fontsize = 9),
-              column_names_gp = gpar(fontsize = 9),
-              cell_fun = function(j, i, x, y, width, height, fill) {
-                grid.text(m_anno[i, j], x, y, gp = gpar(fontsize = 10))},
-              heatmap_legend_param = list(direction = "horizontal")
-              
-)
-
-pdf(paste0('~/marenostrum/Projects/GTEx_v8/Methylation/Plots/', pw, "_DEGs.chi_square_heatmap.pdf"),
-    width = 3, height = 4)
-draw(ht,
-     heatmap_legend_side = "bottom",
-     column_title = pw_colnames[[pw]],
-     column_title_gp = gpar(fontsize = 10))
-dev.off()
-
-
-
-# # ancestry-BMI DEGs  ----
-# pw <- "Ancestry:BMI"    
-# pw_colname <- pw_colnames[[pw]]
-# # male - young # down-down
-# # male - old # down-up
-# # female - young # up - down
-# # female - old # up-up
-# 
-# # observed vs expected ratio (cell color)
-# m <- odds_ratio[[pw]][,index]
-# colnames(m) <- ordered_columns[[pw]]
-# rownames(m) <- tissue_info$tissue_abbrv
-# range(m, na.rm=T)
-# col_fun <- colorRamp2(seq(-2,2,length.out=11),
-#                       rev(brewer.pal(11, "RdBu")))
-# 
-# # number of DEGs (cell value)
-# m_anno <- number_of_DEGs[[pw]][, index]
-# m_anno <- matrix(as.character(m_anno),
-#                  nrow = length(tissues),
-#                  ncol = 4,
-#                  byrow = F)
-# m_anno[m_anno == "0"] <- ""
-# colnames(m_anno) <- ordered_columns[[pw]]
-# rownames(m_anno) <- tissue_info$tissue_abbrv
-# 
-# # fdr (row annotation)
-# m_fdr <- fdr[rownames(fdr[!is.na(fdr[,pw_colname]) & fdr[,pw_colname]>0,]),pw_colname] # NA: not test; 0: not significant
-# range(m_fdr, na.rm = T)
-# col_fun_fdr <-  colorRamp2(c(0, seq(-log10(0.05), max(m_fdr, na.rm=T), length.out=9)),
-#                            c("white", brewer.pal(9, "Reds")))
-# 
-# m <- m[rownames(fdr[!is.na(fdr[,pw_colname]) & fdr[,pw_colname]>0,]),]
-# m_anno <- m_anno[rownames(fdr[!is.na(fdr[,pw_colname]) & fdr[,pw_colname]>0,]),]
-# 
-# # row annotation
-# row_ha_left <-  HeatmapAnnotation("Tissues" = rownames(m),
-#                                   "FDR" = m_fdr,
-#                                   col = list("Tissues" = tissues_cols,
-#                                              "FDR" = col_fun_fdr),
-#                                   show_legend = F, 
-#                                   show_annotation_name = T,
-#                                   simple_anno_size = unit(0.3,"cm"),
-#                                   annotation_name_gp =  gpar(fontsize = 9),
-#                                   which = "row")
-# # column annotation
-# cols <- c("EA" = alpha(traits_cols["Ancestry"], 0.5),
-#           "AA" = traits_cols["Ancestry"],
-#           "normal" = alpha(traits_cols["BMI"], 0.5),
-#           "overweigth" = traits_cols["BMI"])
-# names(cols) <- c("EA", "AA", "normal", "overweigth")
-# 
-# m_top_bar <- rbind.data.frame(apply(m, 2, function(x) sum(x<0, na.rm=T)),
-#                               apply(m, 2, function(x) sum(x>0, na.rm=T))
-# )
-# column_top_anno <- HeatmapAnnotation("BMI" = sapply(colnames(m), function(i) unlist(strsplit(i, split = " - "))[[2]]),
-#                                      "Ancestry" = sapply(colnames(m), function(i) unlist(strsplit(i, split = " - "))[[1]]), 
-#                                      "number of tissues" =  anno_barplot(t(m_top_bar),
-#                                                                          gp = gpar(fill = brewer.pal(11, "RdBu")[c(10,2)],
-#                                                                                    col = brewer.pal(11, "RdBu")[c(10,2)])),
-#                                      col = list("BMI" = cols,
-#                                                 "Ancestry" = cols),
-#                                      show_legend = T, 
-#                                      show_annotation_name = T,
-#                                      simple_anno_size = unit(0.3,"cm"),
-#                                      annotation_name_gp =  gpar(fontsize = 9)
-# )
-# # heatmap
-# ht <- Heatmap(m,
-#               col = col_fun,
-#               na_col = "white",
-#               cluster_rows = F,
-#               cluster_columns = F,
-#               name = "log2(O/E)",
-#               row_names_side = "left",
-#               column_names_side = "top",
-#               column_names_rot =  45,
-#               top_annotation = column_top_anno,
-#               left_annotation = row_ha_left,
-#               row_names_gp = gpar(fontsize = 9),
-#               column_names_gp = gpar(fontsize = 9),
-#               cell_fun = function(j, i, x, y, width, height, fill) {
-#                 grid.text(m_anno[i, j], x, y, gp = gpar(fontsize = 10))},
-#               heatmap_legend_param = list(direction = "horizontal")
-#               
-# )
-# 
-# pdf(paste0(outpath, pw, "_DEGs.chi_square_heatmap.pdf"),
-#     width = 3, height = 4)
-# draw(ht,
-#      heatmap_legend_side = "bottom",
-#      column_title = pw_colnames[[pw]],
-#      column_title_gp = gpar(fontsize = 10))
 # dev.off()
 
 
@@ -838,196 +644,3 @@ draw(ht,
      column_title = pw_colnames[[pw]],
      column_title_gp = gpar(fontsize = 10))
 # dev.off()
-
-# # sex-BMI DEGs  ----
-# pw <- "Sex:BMI"    
-# pw_colname <- pw_colnames[[pw]]
-# # male - young # down-down
-# # male - old # down-up
-# # female - young # up - down
-# # female - old # up-up
-# 
-# # observed vs expected ratio (cell color)
-# m <- odds_ratio[[pw]][,index]
-# colnames(m) <- ordered_columns[[pw]]
-# rownames(m) <- tissue_info$tissue_abbrv
-# range(m, na.rm=T)
-# col_fun <- colorRamp2(seq(-2,2,length.out=11),
-#                       rev(brewer.pal(11, "RdBu")))
-# 
-# # number of DEGs (cell value)
-# m_anno <- number_of_DEGs[[pw]][, index]
-# m_anno <- matrix(as.character(m_anno),
-#                  nrow = length(tissues),
-#                  ncol = 4,
-#                  byrow = F)
-# m_anno[m_anno == "0"] <- ""
-# colnames(m_anno) <- ordered_columns[[pw]]
-# rownames(m_anno) <- tissue_info$tissue_abbrv
-# 
-# # fdr (row annotation)
-# m_fdr <- fdr[rownames(fdr[!is.na(fdr[,pw_colname]) & fdr[,pw_colname]>0,]),pw_colname] # NA: not test; 0: not significant
-# range(m_fdr, na.rm = T)
-# col_fun_fdr <-  colorRamp2(c(0, seq(-log10(0.05), max(m_fdr, na.rm=T), length.out=9)),
-#                            c("white", brewer.pal(9, "Reds")))
-# 
-# m <- m[rownames(fdr[!is.na(fdr[,pw_colname]) & fdr[,pw_colname]>0,]),]
-# m_anno <- m_anno[rownames(fdr[!is.na(fdr[,pw_colname]) & fdr[,pw_colname]>0,]),]
-# 
-# # row annotation
-# row_ha_left <-  HeatmapAnnotation("Tissues" = rownames(m),
-#                                   "FDR" = m_fdr,
-#                                   col = list("Tissues" = tissues_cols,
-#                                              "FDR" = col_fun_fdr),
-#                                   show_legend = F, 
-#                                   show_annotation_name = T,
-#                                   simple_anno_size = unit(0.3,"cm"),
-#                                   annotation_name_gp =  gpar(fontsize = 9),
-#                                   which = "row")
-# # column annotation
-# cols <- c("male" = alpha(traits_cols["Sex"], 0.5),
-#           "female" = traits_cols["Sex"],
-#           "normal" = alpha(traits_cols["BMI"], 0.5),
-#           "overweigth" = traits_cols["BMI"])
-# names(cols) <- c("male", "female", "normal", "overweigth")
-# 
-# m_top_bar <- rbind.data.frame(apply(m, 2, function(x) sum(x<0, na.rm=T)),
-#                               apply(m, 2, function(x) sum(x>0, na.rm=T))
-# )
-# column_top_anno <- HeatmapAnnotation("BMI" = sapply(colnames(m), function(i) unlist(strsplit(i, split = " - "))[[2]]),
-#                                      "Sex" = sapply(colnames(m), function(i) unlist(strsplit(i, split = " - "))[[1]]), 
-#                                      "number of tissues" =  anno_barplot(t(m_top_bar),
-#                                                                          gp = gpar(fill = brewer.pal(11, "RdBu")[c(10,2)],
-#                                                                                    col = brewer.pal(11, "RdBu")[c(10,2)])),
-#                                      col = list("BMI" = cols,
-#                                                 "Sex" = cols),
-#                                      show_legend = T, 
-#                                      show_annotation_name = T,
-#                                      simple_anno_size = unit(0.3,"cm"),
-#                                      annotation_name_gp =  gpar(fontsize = 9)
-# )
-# # heatmap
-# ht <- Heatmap(m,
-#               col = col_fun,
-#               na_col = "white",
-#               cluster_rows = F,
-#               cluster_columns = F,
-#               name = "log2(O/E)",
-#               row_names_side = "left",
-#               column_names_side = "top",
-#               column_names_rot =  45,
-#               top_annotation = column_top_anno,
-#               left_annotation = row_ha_left,
-#               row_names_gp = gpar(fontsize = 9),
-#               column_names_gp = gpar(fontsize = 9),
-#               cell_fun = function(j, i, x, y, width, height, fill) {
-#                 grid.text(m_anno[i, j], x, y, gp = gpar(fontsize = 10))},
-#               heatmap_legend_param = list(direction = "horizontal")
-#               
-# )
-# 
-# pdf(paste0(outpath, pw, "_DEGs.chi_square_heatmap.pdf"),
-#     width = 3, height = 4)
-# draw(ht,
-#      heatmap_legend_side = "bottom",
-#      column_title = pw_colnames[[pw]],
-#      column_title_gp = gpar(fontsize = 10))
-# dev.off()
-# 
-# # Age-BMI DEGs  ----
-# pw <- "Age:BMI"    
-# pw_colname <- pw_colnames[[pw]]
-# # male - young # down-down
-# # male - old # down-up
-# # female - young # up - down
-# # female - old # up-up
-# 
-# # observed vs expected ratio (cell color)
-# m <- odds_ratio[[pw]][,index]
-# colnames(m) <- ordered_columns[[pw]]
-# rownames(m) <- tissue_info$tissue_abbrv
-# range(m, na.rm=T)
-# col_fun <- colorRamp2(seq(-2,2,length.out=11),
-#                       rev(brewer.pal(11, "RdBu")))
-# 
-# # number of DEGs (cell value)
-# m_anno <- number_of_DEGs[[pw]][, index]
-# m_anno <- matrix(as.character(m_anno),
-#                  nrow = length(tissues),
-#                  ncol = 4,
-#                  byrow = F)
-# m_anno[m_anno == "0"] <- ""
-# colnames(m_anno) <- ordered_columns[[pw]]
-# rownames(m_anno) <- tissue_info$tissue_abbrv
-# 
-# # fdr (row annotation)
-# m_fdr <- fdr[rownames(fdr[!is.na(fdr[,pw_colname]) & fdr[,pw_colname]>0,]),pw_colname] # NA: not test; 0: not significant
-# range(m_fdr, na.rm = T)
-# col_fun_fdr <-  colorRamp2(c(0, seq(-log10(0.05), max(m_fdr, na.rm=T), length.out=9)),
-#                            c("white", brewer.pal(9, "Reds")))
-# 
-# m <- m[rownames(fdr[!is.na(fdr[,pw_colname]) & fdr[,pw_colname]>0,]),]
-# m_anno <- m_anno[rownames(fdr[!is.na(fdr[,pw_colname]) & fdr[,pw_colname]>0,]),]
-# 
-# # row annotation
-# row_ha_left <-  HeatmapAnnotation("Tissues" = rownames(m),
-#                                   "FDR" = m_fdr,
-#                                   col = list("Tissues" = tissues_cols,
-#                                              "FDR" = col_fun_fdr),
-#                                   show_legend = F, 
-#                                   show_annotation_name = T,
-#                                   simple_anno_size = unit(0.3,"cm"),
-#                                   annotation_name_gp =  gpar(fontsize = 9),
-#                                   which = "row")
-# # column annotation
-# cols <- c("young" = alpha(traits_cols["Age"], 0.5),
-#           "old" = traits_cols["Age"],
-#           "normal" = alpha(traits_cols["BMI"], 0.5),
-#           "overweigth" = traits_cols["BMI"])
-# names(cols) <- c("young", "old", "normal", "overweigth")
-# 
-# m_top_bar <- rbind.data.frame(apply(m, 2, function(x) sum(x<0, na.rm=T)),
-#                               apply(m, 2, function(x) sum(x>0, na.rm=T))
-# )
-# column_top_anno <- HeatmapAnnotation("Age" = sapply(colnames(m), function(i) unlist(strsplit(i, split = " - "))[[2]]),
-#                                      "Sex" = sapply(colnames(m), function(i) unlist(strsplit(i, split = " - "))[[1]]), 
-#                                      "number of tissues" =  anno_barplot(t(m_top_bar),
-#                                                                          gp = gpar(fill = brewer.pal(11, "RdBu")[c(10,2)],
-#                                                                                    col = brewer.pal(11, "RdBu")[c(10,2)])),
-#                                      col = list("Age" = cols,
-#                                                 "Sex" = cols),
-#                                      show_legend = T, 
-#                                      show_annotation_name = T,
-#                                      simple_anno_size = unit(0.3,"cm"),
-#                                      annotation_name_gp =  gpar(fontsize = 9)
-# )
-# # heatmap
-# ht <- Heatmap(m,
-#               col = col_fun,
-#               na_col = "white",
-#               cluster_rows = F,
-#               cluster_columns = F,
-#               name = "log2(O/E)",
-#               row_names_side = "left",
-#               column_names_side = "top",
-#               column_names_rot =  45,
-#               top_annotation = column_top_anno,
-#               left_annotation = row_ha_left,
-#               row_names_gp = gpar(fontsize = 9),
-#               column_names_gp = gpar(fontsize = 9),
-#               cell_fun = function(j, i, x, y, width, height, fill) {
-#                 grid.text(m_anno[i, j], x, y, gp = gpar(fontsize = 10))},
-#               heatmap_legend_param = list(direction = "horizontal")
-#               
-# )
-# 
-# pdf(paste0(outpath, pw, "_DEGs.chi_square_heatmap.pdf"),
-#     width = 3, height = 4)
-# draw(ht,
-#      heatmap_legend_side = "bottom",
-#      column_title = pw_colnames[[pw]],
-#      column_title_gp = gpar(fontsize = 10))
-# dev.off()
-# 
-
-

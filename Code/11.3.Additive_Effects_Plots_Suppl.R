@@ -1,4 +1,9 @@
 #!/usr/bin/env Rscript
+# @Author: Winona Oliveros
+# @E-mail: winona.oliveros@bsc.es
+# @Description: Code to do supplementary plots of additive effects (OLD)
+# @software version: R=4.2.2
+
 
 # Libraries ----
 library(ggplot2)
@@ -45,10 +50,6 @@ tissues <- tissue_info$tissue_ID
 tissues_cols <- tissue_info$colcodes 
 names(tissues_cols) <- tissue_info$tissue_abbrv
 
-# Differential expression analyses: results tables ----
-# for(tissue in tissues){
-#   if(!file.exists(paste0("~/GTEx_v8/Raquel/03_DEA/01.DEA/Tissues/",tissue,"/", tissue,".voom_limma.covariates_and_traits.results.rds"))){print(tissue)}
-# }
 get_DMPs <- function(tissue, trait){
   if(tissue %in% sex_tissues & trait == "SEX2"){
     NA
@@ -91,10 +92,7 @@ rownames(d) <- tissue_info$tissue_abbrv
 # 1.1 Heatmap ----
 library(wesanderson)
 n_cols <- wes_palettes$GrandBudapest1[c(1,2,3,4)]
-# n_cols <- c("#EA6B70",
-#             "#CA3C70",
-#             "#8F2390",
-#             "#00299C")
+
 names(n_cols) <- c(1:4)
 # Number of samples
 metadata <- lapply(tissues, function(tissue) {
@@ -175,15 +173,7 @@ barplot(apply(d, 1, function(x) x/sum(x))[,length(tissues):1],
         col = n_cols,
         border = NA)
 axis(1, at =axTicks(1), labels = 100*axTicks(1))
-# plot.new()
-# legend("center",
-#        c("1 demographic variable",
-#          "2 demographic variables",
-#          "3 demographic variables",
-#          "4 demographic variables"),
-#        pch = 15,
-#        col = brewer.pal(5, "Greys")[2:5],
-#        bty = 'n')
+
 dev.off()
 
 
@@ -301,240 +291,3 @@ p1 <- ggplot(df) +
   xlab('') + ylab ("Number of DEGs") +
   scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE))
 p1
-# % of DEGs 
-# df <- melt( apply(number_of_DEGs, 2, function(x) x/sum(x)) )
-# colnames(df) <- c("Tissue","Variables","DEGs")
-# df$Variables <- factor(df$Variables, levels = pw.traits, order = T)
-# df$Tissue <- factor(df$Tissue, levels = tissue_info$tissue_ID, order = T)
-# p2 <- ggplot(df) +
-#   geom_bar(aes(x= Variables, y = DEGs,  fill = Tissue),
-#            stat = "identity") +
-#   scale_fill_manual(values = tissue_info$colcodes) +
-#   theme_minimal() +
-#   theme(legend.position = "none",
-#         axis.text.x = element_text(angle = 90, vjust = 0)) +
-#   xlab('') + ylab ("% of DEGs")
-# p2
-# 
-# p2 <- ggplot(df) +
-#   geom_bar(aes(x= Variables, y = DEGs,  fill = Tissue, group = DEGs),
-#            stat = "identity") +
-#   scale_fill_manual(values = tissue_info$colcodes) +
-#   theme_minimal() +
-#   theme(legend.position = "none",
-#         axis.text.x = element_text(angle = 90, vjust = 0)) +
-#   xlab('') + ylab ("% of DEGs")
-# p2
-
-# 01.OverlapBetweenPairsOfVariables.Bar_plots 8x5
-# grid.arrange(p1, p2, ncol =2)
-# 
-# # 'Grid' plot ----
-# # Prepare data --
-# # count data ----
-# df <- melt(number_of_DEGs)
-# colnames(df) <- c("Tissue","Variables","DEGs")
-# df$Variables <- factor(df$Variables, levels = pw.traits, order = T)
-# df$Tissue <- factor(df$Tissue, levels = tissue_info$tissue_ID, order = T)
-# #df$DEGs <- 100*df$DEGs
-# df$var1 <- sapply(as.character(df$Variables), function(i) unlist(strsplit(i, split = ":"))[[1]])
-# df$var2 <- sapply(as.character(df$Variables), function(i) unlist(strsplit(i, split = ":"))[[2]])
-# 
-# # mock data ----
-# mock.data <- rbind.data.frame(cbind.data.frame("Tissue" = tissue_info$tissue_ID,
-#                                                "Variables" = "Age:Age",
-#                                                "DEGs" = 0,
-#                                                "var1" = "Age",
-#                                                "var2" = "Age"),
-#                               cbind.data.frame("Tissue" = tissue_info$tissue_ID,
-#                                                "Variables" = "Ancestry:Ancestry",
-#                                                "DEGs" = 0,
-#                                                "var1" = "Ancestry",
-#                                                "var2" = "Ancestry"),
-#                               cbind.data.frame("Tissue" = tissue_info$tissue_ID,
-#                                                "Variables" = "Sex:Sex",
-#                                                "DEGs" = 0,
-#                                                "var1" = "Sex",
-#                                                "var2" = "Sex"
-#                               ),
-#                               cbind.data.frame("Tissue" = tissue_info$tissue_ID,
-#                                                "Variables" = "BMI:BMI",
-#                                                "DEGs" = 0,
-#                                                "var1" = "BMI",
-#                                                "var2" = "BMI"
-#                               ),
-#                               cbind.data.frame("Tissue" = tissue_info$tissue_ID,
-#                                                "Variables" = "Sex:Ancestry",
-#                                                "DEGs" = 0,
-#                                                "var1" = "Sex",
-#                                                "var2" = "Ancestry"
-#                               ),
-#                               cbind.data.frame("Tissue" = tissue_info$tissue_ID,
-#                                                "Variables" = "BMI:Sex",
-#                                                "DEGs" = 0,
-#                                                "var1" = "BMI",
-#                                                "var2" = "Sex"
-#                               ),
-#                               cbind.data.frame("Tissue" = tissue_info$tissue_ID,
-#                                                "Variables" = "Sex:Age",
-#                                                "DEGs" = 0,
-#                                                "var1" = "Sex",
-#                                                "var2" = "Age"
-#                               ),
-#                               cbind.data.frame("Tissue" = tissue_info$tissue_ID,
-#                                                "Variables" = "Ancestry:Age",
-#                                                "DEGs" = 0,
-#                                                "var1" = "Ancestry",
-#                                                "var2" = "Age"
-#                               ),
-#                               cbind.data.frame("Tissue" = tissue_info$tissue_ID,
-#                                                "Variables" = "BMI:Ancestry",
-#                                                "DEGs" = 0,
-#                                                "var1" = "BMI",
-#                                                "var2" = "Ancestry"
-#                               ),
-#                               cbind.data.frame("Tissue" = tissue_info$tissue_ID,
-#                                                "Variables" = "BMI:Age",
-#                                                "DEGs" = 0,
-#                                                "var1" = "BMI",
-#                                                "var2" = "Age"
-#                               )
-# )
-# 
-# # Add fdr to color bar border --
-# fisher_results <- readRDS("~/GTEx_v8/Raquel/Draft/Analysis/Expression.OverlapBetweenTraits/Data/03.OverlapBetweenVariables.Fisher_results.rds")
-# # black border if ENRICHMENT
-# df$fdr <- sapply(1:nrow(df), function(row) ifelse(is.na(fisher_results[fisher_results$Tissue_ID == df[row,"Tissue"] & 
-#                                                                          fisher_results$Traits == df[row, "Variables"], "FDR"]),
-#                                                   "n.s",
-#                                                   ifelse(fisher_results[fisher_results$Tissue_ID == df[row,"Tissue"] & 
-#                                                                           fisher_results$Traits == df[row, "Variables"], "FDR"] < 0,
-#                                                          "n.s",
-#                                                          "s")))
-# mock.data$fdr <- "n.s"
-# data <- rbind.data.frame(df, mock.data)                              
-# data$var1 <- factor(data$var1, levels = traits, order = T)
-# data$var2 <- factor(data$var2, levels = traits, order = T)
-# data$Tissue <- factor(data$Tissue, levels = tissue_info$tissue_ID, order = T)
-# # Add x-dummy value
-# data$x <- 1
-# # Add border color if FDR < 0.05
-# data$fdr <- factor(data$fdr, levels = c("s", "n.s"), order = T)
-# # 
-# data$col <- sapply(1:nrow(data), function(row) 
-#   ifelse(data[row,"fdr"]=="n.s",
-#          alpha(tissue_info[tissue_info$tissue_ID== data[row, "Tissue"], "colcodes"],0.25),
-#          tissue_info[tissue_info$tissue_ID== data[row, "Tissue"], "colcodes"]
-#   ))
-# 
-# # 01.OverlapBetweenVariables.Grid.Number_DEGs.pdf 9x3
-# ggplot(data) + 
-#   geom_bar(aes(x = x, y = DEGs,  fill = Tissue, group = DEGs),
-#            stat = "identity") +
-#   scale_fill_manual(values = tissue_info$colcodes) +
-#   theme_minimal() +
-#   theme(legend.position = "none") +
-#   xlab('') + ylab ("% of DEGs") +
-#   facet_grid(var1 ~ var2) +
-#   coord_flip() +
-#   scale_y_continuous(position = "right") +
-#   scale_x_continuous(position = "top") +
-#   scale_colour_manual(values = c("black", NA))
-# 
-# # 'Grid' plot
-# # 01.OverlapBetweenVariables.Grid_pot.Border (9 x 3)
-# # ggplot(data) + 
-# #   geom_bar(aes(x = x, y = DEGs,  fill = Tissue, col = fdr, group = DEGs),
-# #            stat = "identity") +
-# #   scale_fill_manual(values = tissue_info$colcodes) +
-# #   theme_minimal() +
-# #   theme(legend.position = "none") +
-# #   xlab('') + ylab ("Number of DEGs") +
-# #   facet_grid(var1 ~ var2) +
-# #   coord_flip() +
-# #   scale_y_continuous(position = "right") +
-# #   scale_colour_manual(values = c("black", NA))
-# 
-# # Prepare data --
-# # Grid sharing data ----
-# df <- melt(d)
-# colnames(df) <- c("Sharing","value")
-# df$Variables <- rep(rownames(d), 4)
-# df$var2 <- sapply(as.character(df$Variables), function(i) unlist(strsplit(i, split = ":"))[[1]])
-# df$var1 <- sapply(as.character(df$Variables), function(i) unlist(strsplit(i, split = ":"))[[2]])
-# df$Variables <- paste0(df$var1, ":", df$var2)
-# 
-# # mock data ----
-# mock.data <- rbind.data.frame(cbind.data.frame("Sharing" = rep(1,6),
-#                                                "value" = 0,
-#                                                "Variables" = "Age:Age",
-#                                                "var1" = "Age",
-#                                                "var2" = "Age"),
-#                               cbind.data.frame("Sharing" = rep(1,6),
-#                                                "value" = 0,
-#                                                "Variables" = "Ancestry:Ancestry",
-#                                                "var1" = "Ancestry",
-#                                                "var2" = "Ancestry"),
-#                               cbind.data.frame("Sharing" = rep(1,6),
-#                                                "value" = 0,
-#                                                "Variables" = "Sex:Sex",
-#                                                "var1" = "Sex",
-#                                                "var2" = "Sex"),
-#                               cbind.data.frame("Sharing" = rep(1,6),
-#                                                "value" = 0,
-#                                                "Variables" = "BMI:BMI",
-#                                                "var1" = "BMI",
-#                                                "var2" = "BMI"),
-#                               cbind.data.frame("Sharing" = rep(1,6),
-#                                                "value" = 0,
-#                                                "Variables" = "Age:Ancestry",
-#                                                "var1" = "Age",
-#                                                "var2" = "Ancestry"),
-#                               cbind.data.frame("Sharing" = rep(1,6),
-#                                                "value" = 0,
-#                                                "Variables" = "Age:Sex",
-#                                                "var1" = "Age",
-#                                                "var2" = "Sex"),
-#                               cbind.data.frame("Sharing" = rep(1,6),
-#                                                "value" = 0,
-#                                                "Variables" = "Age:BMI",
-#                                                "var1" = "Age",
-#                                                "var2" = "BMI"),
-#                               cbind.data.frame("Sharing" = rep(1,6),
-#                                                "value" = 0,
-#                                                "Variables" = "Ancestry:Sex",
-#                                                "var1" = "Ancestry",
-#                                                "var2" = "Sex"),
-#                               cbind.data.frame("Sharing" = rep(1,6),
-#                                                "value" = 0,
-#                                                "Variables" = "Ancestry:BMI",
-#                                                "var1" = "Ancestry",
-#                                                "var2" = "BMI"),
-#                               cbind.data.frame("Sharing" = rep(1,6),
-#                                                "value" = 0,
-#                                                "Variables" = "Sex:BMI",
-#                                                "var1" = "Sex",
-#                                                "var2" = "BMI")
-#                               
-# )
-# 
-# data <- rbind.data.frame(df, mock.data)                              
-# data$var1 <- factor(data$var1, levels = traits, order = T)
-# data$var2 <- factor(data$var2, levels = traits, order = T)
-# data$Sharing <- factor(data$Sharing, levels = rev(c("1", "2", "3", ">3")), order = T)
-# # Add x-dummy value
-# data$x <- 1
-# # 01.OverlapBetweenVariables.Grid.Number_DEGs.pdf 9x3
-# ggplot(data) + 
-#   geom_bar(aes(x = x, y = value,  fill = Sharing),
-#            stat = "identity") +
-#   scale_fill_manual(values = rev(brewer.pal(4, "Greys"))) +
-#   theme_minimal() +
-#   theme(legend.position = "none") +
-#   xlab('') + ylab ("% of DEGs") +
-#   facet_grid(var1 ~ var2) +
-#   coord_flip() +
-#   scale_y_continuous(position = "left") +
-#   scale_x_continuous(position = "bottom") 
-
-# 01.OverlapBetweenVariables.Grid.Tissue_sharing.pdf 9x3

@@ -1,3 +1,6 @@
+
+
+
 library(ComplexHeatmap)
 library(RColorBrewer)
 suppressPackageStartupMessages(library(circlize))
@@ -53,15 +56,12 @@ for(tissue in sex_tissues[c(2,3)]){
 }
 
 
-### plot rho of correlated probes by location ############
-### first tissue sep ####
 ### read Correlations
 get_corr <- function(tissue, trait){
   if(tissue %in% sex_tissues & trait == "SEX"){
     NA
   }else{
     model <- readRDS(paste0(project_path, "Tissues/",tissue, "/",trait,'_Correlations_probes_genes.rds'))
-    #rownames(model[[trait]][model[[trait]]$adj.P.Val<0.05,])
     model
   }
 }
