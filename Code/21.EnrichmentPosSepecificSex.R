@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Perform functional enrichment on DMPs per chromatin region and tissue
+# @software version: R=4.2.2
+
 ###### Enrichment per region ######
 #### enrichments #####
 
