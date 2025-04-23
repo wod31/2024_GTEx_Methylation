@@ -1,3 +1,10 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Plot gene expression of some examples of genes DM or DV
+# @software version: R=4.2.2
+
+
 ############# Plot expression of genes ########
 #!/usr/bin/env Rscript
 set.seed(1)

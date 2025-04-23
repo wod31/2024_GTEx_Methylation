@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# @Author: Jose Miguel Ramirez
+# @Author: Jose Miguel Ramirez; Modified by Winona Oliveros 
 # @E-mail: jose.ramirez1@bsc.es
 # @Description: Methylation replication in previous studies
 # @software version: R=4.2.2
