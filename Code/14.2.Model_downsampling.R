@@ -1,4 +1,8 @@
 #!/usr/bin/env Rscript
+# @Author: Winona Oliveros; Adapted by Jose Miguel Ramirez
+# @E-mail: winona.oliveros@bsc.es
+# @Description: Code to model DNAm, downsampling
+# @software version: R=4.2.2
 
 # Parsing
 library(optparse)

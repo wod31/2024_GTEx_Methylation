@@ -1,4 +1,8 @@
 #!/usr/bin/env Rscript
+# @Author: Jose Miguel Ramirez
+# @E-mail: winn95@gmail.com
+# @Description: Script to Overlap DVPs and DMPs
+# @software version: R=4.2.2
 
 #Set path 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) #If using Rstudio

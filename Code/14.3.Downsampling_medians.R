@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 # @Author: Jose Miguel Ramirez
 # @E-mail: jose.ramirez1@bsc.es
-# @Description: Code to downsample
+# @Description: Code to get results from downsampling, median nº of DMPs
 # @software version: R=4.2.2
 
 

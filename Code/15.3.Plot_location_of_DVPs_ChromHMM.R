@@ -1,4 +1,8 @@
 #!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Split to plot the enrichment of DVPs at each chromatin region
+# @software version: R=4.2.2
 
 #Set path 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) #If using Rstudio

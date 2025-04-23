@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Jose Miguel Ramirez
+# @E-mail: winn95@gmail.com
+# @Description: Script to plot some examples of DVPs
+# @software version: R=4.2.2
+
 rm(list=ls())
 Sys.time()
 library(ggplot2)

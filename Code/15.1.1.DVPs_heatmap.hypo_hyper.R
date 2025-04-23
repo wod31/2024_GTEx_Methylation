@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Jose Miguel Ramirez
+# @E-mail: winn95@gmail.com
+# @Description: Script to plot a heatmap with the DVPs and their direction
+# @software version: R=4.2.2
+
 rm(list=ls())
 suppressPackageStartupMessages(library(ComplexHeatmap))
 library(RColorBrewer)
@@ -15,8 +21,8 @@ project_path <- paste0(first_dir, "/projects/bsc83/Projects/GTEx_v8/Methylation/
 project_path <- paste0(first_dir, "Projects/GTEx_v8/Methylation/")
 
 tissues <- c("Lung", "ColonTransverse", "Ovary", "Prostate", "BreastMammaryTissue", "KidneyCortex", "Testis", "WholeBlood", "MuscleSkeletal")
-names <- c("Age", "Ancestry", "Sex")
-data <- matrix(nrow = length(tissues), ncol=3, dimnames = list(tissues, names))
+names <- c("Age", "Ancestry", "BMI", "Sex")
+data <- matrix(nrow = length(tissues), ncol=4, dimnames = list(tissues, names))
 
 # tissue_info <- readRDS(paste0(first_dir, "/projects/bsc83/Projects/GTEx_v8/Jose/00_Data/Tissue_info_whole.rds"))
 tissue_info <- readRDS(paste0(project_path, "Data/Tissue_info_whole.rds"))
@@ -28,58 +34,52 @@ tissue_info$name <- gsub("- ", "", tissue_info$tissue_name)
 n_samples <- c()
 for(tissue in tissues){ 
   print(tissue)
-  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVG_Age.rds"))
-  model <- model[!is.na(model$Adj.P.Value),]
+  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVP_Age.rds"))
   data[tissue, "Age"] <- sum(model$Adj.P.Value<0.05)
-  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVG_Ancestry.rds"))
-  model <- model[!is.na(model$Adj.P.Value),]
+  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVP_Ancestry.rds"))
   data[tissue, "Ancestry"] <- sum(model$Adj.P.Value<0.05)
-  if(file.exists(paste0(project_path, "Tissues/",tissue, "/DVG_Sex.rds"))){
-    model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVG_Sex.rds"))
-    model <- model[!is.na(model$Adj.P.Value),]
+  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVP_BMI.rds"))
+  data[tissue, "BMI"] <- sum(model$Adj.P.Value<0.05)
+  if(file.exists(paste0(project_path, "Tissues/",tissue, "/DVP_Sex.rds"))){
+    model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVP_Sex.rds"))
     data[tissue, "Sex"] <- sum(model$Adj.P.Value<0.05)
   } 
   
-  metadata <- readRDS(paste0(project_path, "Tissues/",tissue, "/metadata_expression.rds"))
-  admixture_ancestry <- read.table('~/marenostrum/Projects/GTEx_v8/Methylation/Data/admixture_inferred_ancestry.txt')
-  colnames(admixture_ancestry) <- c('Donor','AFRv1','EURv1','inferred_ancestry','AFRv2','EURv2')
-  metadata <- merge(metadata, admixture_ancestry[,c("Donor","EURv1")], by='Donor')
+  metadata <- readRDS(paste0(project_path, "Tissues/",tissue, "/metadata.rds"))
   n_samples <- c(n_samples, nrow(metadata))
 }
 
 
 
-data_up <- matrix(nrow = length(tissues), ncol=3, dimnames = list(tissues, names))
+data_up <- matrix(nrow = length(tissues), ncol=4, dimnames = list(tissues, names))
 for(tissue in tissues){ 
   print(tissue)
   
-  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVG_Age.rds"))
-  model <- model[!is.na(model$Adj.P.Value),]
+  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVP_Age.rds"))
   data_up[tissue, "Age"] <- sum(model$Adj.P.Value<0.05 & model$DiffLevene>0)
-  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVG_Ancestry.rds"))
-  model <- model[!is.na(model$Adj.P.Value),]
+  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVP_Ancestry.rds"))
   data_up[tissue, "Ancestry"] <- sum(model$Adj.P.Value<0.05 & model$DiffLevene>0)
-  if(file.exists(paste0(project_path, "Tissues/",tissue, "/DVG_Sex.rds"))){
-    model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVG_Sex.rds"))
-    model <- model[!is.na(model$Adj.P.Value),]
+  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVP_BMI.rds"))
+  data_up[tissue, "BMI"] <- sum(model$Adj.P.Value<0.05 & model$DiffLevene>0)
+  if(file.exists(paste0(project_path, "Tissues/",tissue, "/DVP_Sex.rds"))){
+    model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVP_Sex.rds"))
     data_up[tissue, "Sex"] <- sum(model$Adj.P.Value<0.05 & model$DiffLevene>0)
   }
   
 }
 
-data_down <- matrix(nrow = length(tissues), ncol=3, dimnames = list(tissues, names))
+data_down <- matrix(nrow = length(tissues), ncol=4, dimnames = list(tissues, names))
 for(tissue in tissues){ 
   print(tissue)
   
-  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVG_Age.rds"))
-  model <- model[!is.na(model$Adj.P.Value),]
+  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVP_Age.rds"))
   data_down[tissue, "Age"] <- sum(model$Adj.P.Value<0.05 & model$DiffLevene<0)
-  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVG_Ancestry.rds"))
-  model <- model[!is.na(model$Adj.P.Value),]
+  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVP_Ancestry.rds"))
   data_down[tissue, "Ancestry"] <- sum(model$Adj.P.Value<0.05 & model$DiffLevene<0)
-  if(file.exists(paste0(project_path, "Tissues/",tissue, "/DVG_Sex.rds"))){
-    model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVG_Sex.rds"))
-    model <- model[!is.na(model$Adj.P.Value),]
+  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVP_BMI.rds"))
+  data_down[tissue, "BMI"] <- sum(model$Adj.P.Value<0.05 & model$DiffLevene<0)
+  if(file.exists(paste0(project_path, "Tissues/",tissue, "/DVP_Sex.rds"))){
+    model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVP_Sex.rds"))
     data_down[tissue, "Sex"] <- sum(model$Adj.P.Value<0.05 & model$DiffLevene<0)
   }
   
@@ -134,9 +134,9 @@ create_heatmap <- function(data, tissue_info, size=12){ #It takes as input the w
           
   )
 }
-data <- data[,c("Ancestry", "Sex", "Age")]
+data <- data[,c("Ancestry", "Sex", "Age", "BMI")]
 rownames(data) <- tissue_info$name[match(rownames(data), tissue_info$tissue_ID)]
-pdf(paste0(project_path, "Plots/Heatmap_DVGs.pdf"), height = 4.5, width = 6.5)
+pdf(paste0(project_path, "Plots/Heatmap_DVPs.pdf"), height = 4.5, width = 6.5)
 create_heatmap(data, tissue_info, size=12)
 dev.off()
 # create_heatmap(data_up, tissue_info, size=12)
@@ -144,7 +144,7 @@ dev.off()
 
 #### number hyper hypo barplot ####
 sex_tissues <- c('Ovary','Prostate','Testis')
-names <- c("Ancestry", "Sex", "Age")
+names <- c("Ancestry", "Sex", "Age", "BMI")
 
 get_tissue_proportion <- function(tissue){
   print(tissue)
@@ -195,10 +195,10 @@ binom_test <- function(trait,tissue) {
   return(binom)   
 }
 
-binom_res <- lapply(names, function(trait) lapply(tissues, function(tissue) binom_test(trait,tissue)))
-names(binom_res) <- names
+binom_res <- lapply(traits, function(trait) lapply(tissues, function(tissue) binom_test(trait,tissue)))
+names(binom_res) <- traits
 
-for (trait in names) {
+for (trait in traits) {
   names(binom_res[[trait]]) <- tissues
 }
 
@@ -258,10 +258,10 @@ for (trait in c('Sex','Age','Ancestry')) {
     tissues_to_test <- tissues[!tissues %in% sex_tissues]
   } 
   if (trait == 'Age') {
-    tissues_to_test <- tissues
+    tissues_to_test <- tissues[tissues != 'MuscleSkeletal']
   }
   if (trait == 'Ancestry') {
-    tissues_to_test <- tissues[tissues != 'KidneyCortex']
+    tissues_to_test <- tissues
   }
   binom_all[[trait]] <- read_data(tissues_to_test, binom_res, trait)
 }
@@ -289,9 +289,7 @@ colors_traits <- list('Hyper:Age'=c('#3D7CD0'),'Hypo:Age'=c('#B4D6F6'),
                       'Hyper:Sex'=c('#3B734E'),'Hypo:Sex'=c('#89AA94'),
                       'Hyper:Ancestry'=c('#F0AE21'),'Hypo:Ancestry'=c('#F9DE8B'))
 
-tissue_expression_variation_explained_df <- tissue_expression_variation_explained_df[!is.na(tissue_expression_variation_explained_df$Trait),]
-
-pdf('~/marenostrum/Projects/GTEx_v8/Methylation/Plots/DVG.barplot.hyper.hypo.new.colors.pdf', height = 4, width = 6)
+pdf('~/marenostrum/Projects/GTEx_v8/Methylation/Plots/DVP.barplot.hyper.hypo.new.colors.pdf', height = 4, width = 6)
 ggplot(tissue_expression_variation_explained_df, aes(fill=label, y=Tissue, x=Prop)) + 
   geom_bar(position="stack", stat="identity", alpha=0.8) + ylab('')+
   scale_fill_manual(values = colors_traits, labels = c("Old", "EA","Female",'Young','AA','Male')) + xlab('Proportion DMPs')+
@@ -301,39 +299,25 @@ dev.off()
 
 #Tissue sharing
 
-final_table <- data.frame(gene="gene1",DiffLevene=1, Adj.P.Value=1, trait=1, tissue=1)
-for(trait in c("Age", "Ancestry", "Sex")){
+final_table <- data.frame(cg="chr1",DiffLevene=1, Adj.P.Value=1, trait=1, tissue=1)
+for(trait in c("Age", "Ancestry", "BMI", "Sex")){
   print(trait)
-  probes <- data.frame(gene="gene1",DiffLevene=1, Adj.P.Value=1,trait=1, tissue=1)
+  probes <- data.frame(cg="chr1",DiffLevene=1, Adj.P.Value=1,trait=1, tissue=1)
   for(tissue in tissues){ 
     print(tissue)
-    if(!file.exists(paste0(project_path, "Tissues/",tissue, "/DVG_", trait, ".rds"))){next}
-    res <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVG_", trait, ".rds"))
+    if(!file.exists(paste0(project_path, "Tissues/",tissue, "/DVP_", trait, ".rds"))){next}
+    res <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVP_", trait, ".rds"))
     if (nrow(res)<1) { next}
     res$tissue <- tissue
     res$trait <- trait
     res$sign <- sign(res$DiffLevene)
-    res$gene <- rownames(res)
-    probes <- rbind(probes, res[,c('gene','DiffLevene','Adj.P.Value','trait','tissue')])
+    res$cg <- rownames(res)
+    probes <- rbind(probes, res[,c('cg','DiffLevene','Adj.P.Value','trait','tissue')])
   }
   probes <- probes[-1,]
   final_table <- rbind(final_table, probes)
 }
 final_table <- final_table[-1,]
-
-### add gene name ###
-library('biomaRt')
-mart <- useDataset("hsapiens_gene_ensembl", useMart("ensembl"))
-
-genes <- getBM(filters= "ensembl_gene_id", attributes= c("ensembl_gene_id","hgnc_symbol","chromosome_name"),
-                               values= gsub('\\..*','', final_table$gene),mart= mart)
-final_table$gene <- gsub('\\..*','', final_table$gene)
-final_table <- merge(final_table, genes, by.x='gene', by.y='ensembl_gene_id', all.x=TRUE)
-final_table <- final_table %>% distinct()
-final_table <- final_table[!is.na(final_table$DiffLevene),]
-  
-write.table(final_table,'~/marenostrum/Projects/GTEx_v8/Methylation/Data/diff_variable_genes.txt', sep = '\t', quote = F, 
-            row.names = F, col.names = T)
 
 library(plyr) #Counting
 #final_table$name <- paste0(final_table$seqnames,':',final_table$start,';',final_table$end,';',final_table$overlapping.genes)
@@ -341,18 +325,17 @@ counts <- ddply(final_table, .(cg, trait), nrow)
 names(counts) <- c("CG", "trait", "number")
 final_table$sign <- as.numeric(sign(final_table$DiffLevene))
 logfc <- ddply(final_table, .(cg, trait), summarise, sign=length(unique(sign))*sign(unique(sign)[1]))
-logfc <- logfc[!is.na(logfc$sign),]
 logfc[abs(logfc$sign)>1,'sign'] <- abs(logfc$sign)[abs(logfc$sign)>1]
 names(logfc) <- c("CG", "trait", "dir")
 
 to_plot <- merge(counts, logfc, by=c("CG", "trait"))
 library(ggplot2)
 to_plot$dir <- as.factor(to_plot$dir)
-to_plot$trait <- factor(to_plot$trait, c("Ancestry", "Age", "Sex"))
-#to_plot <- to_plot[to_plot$number>1,]
+to_plot$trait <- factor(to_plot$trait, c("Ancestry", "Age", "Sex", "BMI"))
+to_plot <- to_plot[to_plot$number>1,]
 ggplot(to_plot) + geom_jitter(aes(trait, number, col=dir), alpha=0.5) +
   theme_bw() + geom_violin(aes(x = trait, y = number, fill=trait),alpha=0.8) +
-  scale_fill_manual(values = c('#C49122', '#4B8C61','#70A0DF'))
+  scale_fill_manual(values = c('#C49122', '#4B8C61'))
 
 
 
@@ -364,13 +347,14 @@ table(to_plot$trait, to_plot$dir, to_plot$number)
 View(to_plot[to_plot$number>=4,])
 
 ##### Final plot ####
+#New tissue sharing plots:
 head(to_plot)
 to_plot$number <- as.factor(to_plot$number)
 
-traits_cols <- c('#C49122','#4B8C61','#70A0DF')
-names(traits_cols) <- c('Ancestry','Sex','Age')
+traits_cols <- c('#C49122','#4B8C61','#70A0DF','#A76595')
+names(traits_cols) <- c('EURv1','SEX2','AGE','BMI')
 strip <- strip_themed(background_x = elem_list_rect(fill = traits_cols))
-to_plot$trait <- factor(to_plot$trait, levels = c('Ancestry','Sex','Age'))
+to_plot$trait <- factor(to_plot$trait, levels = c('EURv1','SEX2','AGE','BMI'))
 
 ggplot(to_plot, aes(y = number, fill=dir)) +
   geom_bar(position = 'fill', alpha=0.8) + 
@@ -378,69 +362,46 @@ ggplot(to_plot, aes(y = number, fill=dir)) +
   theme_bw() + ylab('Nº of Tissues') + xlab('Proportion shared CpG') +
   facet_wrap2(~ trait, strip = strip, nrow = 1) + theme_bw() + scale_x_continuous(breaks=seq(0, 1, 0.5))
 
-
-
-#New tissue sharing plots:
-head(to_plot)
-to_plot$number <- as.factor(to_plot$number)
-
-traits_cols <- c('#C49122','#4B8C61','#70A0DF')
-names(traits_cols) <- c('EURv1','SEX2','AGE','BMI')
-strip <- strip_themed(background_x = elem_list_rect(fill = traits_cols))
-to_plot$trait <- factor(to_plot$trait, levels = c('EURv1','SEX2','AGE','BMI'))
-
-g <- ggplot(to_plot, aes(y = number, fill=dir)) +
-  geom_bar(position = 'fill', alpha=0.8) + 
-  geom_text(aes(label=after_stat(count), x = after_stat(count+1.5)), stat='count', position='fill', size=3,hjust=.8, angle=45) +
-  theme_bw() + ylab('Nº of Tissues') + xlab('Proportion shared CpG') +
-  facet_wrap2(~ trait, strip = strip, nrow = 1) + theme_bw() + scale_x_continuous(breaks=seq(0, 1, 0.5))
-ggsave(paste0(project_path, 'Plots/tissue_sharing_DVGs_ancestry.pdf'), g, dpi = 300, width = 5, height = 2, units = 'in')
-
-saveRDS(to_plot, '~/marenostrum/Projects/GTEx_v8/Methylation/Data/sharing_DVG.rds')
-
 ### proportion of shared per variable ####
-#to_plot <- readRDS('~/marenostrum/Projects/GTEx_v8/Methylation/Data/Sharing_DMP.rds')
-total_DEGs <- sapply(c("Ancestry","Sex","Age"), function(trait) nrow(to_plot[to_plot$trait==trait,]))
+to_plot <- readRDS('~/marenostrum/Projects/GTEx_v8/Methylation/Data/Sharing_DMP.rds')
+total_DEGs <- sapply(c('EURv1','SEX2','AGE','BMI'), function(trait) nrow(to_plot[to_plot$trait==trait,]))
 
-pdf('~/marenostrum/Projects/GTEx_v8/Methylation/Plots/DVG.barplot.total.pdf', height = 4, width = 4)
-barplot(total_DEGs, col = traits_cols, names.arg=c("Ancestry","Sex","Age"), ylab = 'total unique nº of DMP')
-dev.off()
-
+barplot(total_DEGs, col = traits_cols, names.arg=c("Ancestry","Sex","Age","BMI"), ylab = 'total unique nº of DMP')
 plot.new()
 legend("center",
-       c("Ancestry","Sex","Age"),
+       c("Ancestry","Sex","Age","BMI"),
        col = traits_cols,
        pch = 15,
        bty = 'n', ncol = 4)
 
-d <- rbind.data.frame(sapply(c("Ancestry","Sex","Age"), function(trait) 
+d <- rbind.data.frame(sapply(c('EURv1','SEX2','AGE','BMI'), function(trait) 
   100*(sum(to_plot$trait == trait & to_plot$number == '1')/total_DEGs[trait])
 ),
-sapply(c("Ancestry","Sex","Age"), function(trait) 
+sapply(c('EURv1','SEX2','AGE','BMI'), function(trait) 
   100*(sum(to_plot$trait == trait & to_plot$number %in% c('2','3'))/total_DEGs[trait])
 ),
-sapply(c("Ancestry","Sex","Age"), function(trait) 
+sapply(c('EURv1','SEX2','AGE','BMI'), function(trait) 
   100*(sum(to_plot$trait == trait & to_plot$number %in% c('4','5','6','7','8'))/total_DEGs[trait])
 ))
-colnames(d) <- c("Ancestry","Sex","Age")
+colnames(d) <- c("Ancestry","Sex","Age","BMI")
 rownames(d) <- c("Tissue-specific", "Moderate sharing", "High sharing")
 
 library(reshape)
 library(ggh4x)
 library(RColorBrewer)
 df2 <- melt(d)
-df2$type <- rep(c("Tissue-specific", "Moderate sharing", "High sharing"), 3)
+df2$type <- rep(c("Tissue-specific", "Moderate sharing", "High sharing"), 4)
 df2$type <- factor(df2$type, levels = rev(c("Tissue-specific", "Low sharing", "Moderate sharing", "High sharing")), order = T) 
 cols <- brewer.pal(4, "Greys")[c(2:4)]
 names(cols) <- c("Tissue-specific","Moderate sharing", "High sharing")
 
-traits_cols <- c('#C49122','#4B8C61','#70A0DF')
-names(traits_cols) <- c("Ancestry","Sex","Age")
+traits_cols <- c('#C49122','#4B8C61','#70A0DF','#A76595')
+names(traits_cols) <- c("Ancestry","Sex","Age","BMI")
 
-strip <- strip_themed(background_x = elem_list_rect(fill = traits_cols))
-to_plot$trait <- factor(to_plot$trait, levels = c("Ancestry","Sex","Age"))
+strip <- strip_themed(background_x = elem_list_rect(fill = traits_cols[1]))
+to_plot$trait <- factor(to_plot$trait, levels = c('EURv1','SEX2','AGE','BMI'))
 
-p2 <- ggplot(df2, aes(x = 1,
+p2 <- ggplot(df2[df2$variable == 'Ancestry',], aes(x = 1,
                                                    y = value,
                                                    fill = type)) +
   geom_bar(stat= "identity") + 
@@ -457,152 +418,3 @@ p2 <- ggplot(df2, aes(x = 1,
         axis.title = element_text(size = 14)) +
   xlab("") + ylab("DMPs (%)")
 p2
-
-counts <- counts[counts$trait=="Ancestry",]
-
-colors_traits <- list('AGE'=c('#3D7CD0','#B4D6F6'),
-                      'SEX2'=c('#3B734E','#89AA94'),
-                      'EURv1'=c('#F0AE21','#F9DE8B'))
-colors <- c('#F0AE21','#F9DE8B')
-counts$sign[counts$sign==1] <- "Hyper"
-counts$sign[counts$sign==-1] <- "Hypo"
-g <- ggplot(counts) + geom_jitter(aes(sign, V1, color=sign, alpha=0.6)) +
-  theme_bw() +
-  geom_violin(aes(sign, V1, fill=sign),col = "black") +
-  scale_color_manual(values = colors) + 
-  scale_fill_manual(values = colors) + xlab("") + ylab("Number of tissues") +
-  theme(legend.position = "none",
-        axis.text = element_text(size = 10),
-        axis.title = element_text(size = 10))
-
-ggsave(paste0(project_path, 'Plots/tissue_sharing_DVPs_ancestry.pdf'), g, dpi = 300, width = 2, height = 2, units = 'in')
-
-##### overlap DVG with DVPs #####
-data_meth <- list()
-for(tissue in tissues){ 
-  print(tissue)
-  
-  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVP_Age.rds"))
-  model <- model[!is.na(model$Adj.P.Value),]
-  data_meth[[tissue]][['Age']] <- gsub('\\..','',rownames(model[model$Adj.P.Value<0.05,]))
-  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVP_Ancestry.rds"))
-  model <- model[!is.na(model$Adj.P.Value),]
-  data_meth[[tissue]][['Ancestry']]  <- gsub('\\..','',rownames(model[model$Adj.P.Value<0.05,]))
-  if(file.exists(paste0(project_path, "Tissues/",tissue, "/DVP_Sex.rds"))){
-    model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVP_Sex.rds"))
-    model <- model[!is.na(model$Adj.P.Value),]
-    data_meth[[tissue]][['Sex']] <- gsub('\\..','',rownames(model[model$Adj.P.Value<0.05,]))
-  }
-  
-}
-
-data_expr <- list()
-for(tissue in tissues){ 
-  print(tissue)
-  
-  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVG_Age.rds"))
-  model <- model[!is.na(model$Adj.P.Value),]
-  data_expr[[tissue]][['Age']] <- rownames(model[model$Adj.P.Value<0.05,])
-  model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVG_Ancestry.rds"))
-  model <- model[!is.na(model$Adj.P.Value),]
-  data_expr[[tissue]][['Ancestry']]  <-rownames(model[model$Adj.P.Value<0.05,])
-  if(file.exists(paste0(project_path, "Tissues/",tissue, "/DVG_Sex.rds"))){
-    model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DVG_Sex.rds"))
-    model <- model[!is.na(model$Adj.P.Value),]
-    data_expr[[tissue]][['Sex']] <- rownames(model[model$Adj.P.Value<0.05,])
-  }
-  
-}
-
-### merge cpgs with gene annotation ###
-annotation_genes <- read.delim('~/marenostrum/Projects/GTEx_v8/Methylation/Data/Methylation_Epic_gene_promoter_enhancer_processed.txt')
-
-data_meth_genes <- list()
-for(tissue in tissues){ 
-  print(tissue)
-  
-  data_meth_genes[[tissue]][['Age']] <- unique(annotation_genes$UCSC_RefGene_Name[annotation_genes$IlmnID %in% data_meth[[tissue]][['Age']]])
-  data_meth_genes[[tissue]][['Ancestry']] <- unique(annotation_genes$UCSC_RefGene_Name[annotation_genes$IlmnID %in% data_meth[[tissue]][['Ancestry']]])
-  if(file.exists(paste0(project_path, "Tissues/",tissue, "/DVP_Sex.rds"))){
-    data_meth_genes[[tissue]][['Sex']] <- unique(annotation_genes$UCSC_RefGene_Name[annotation_genes$IlmnID %in% data_meth[[tissue]][['Sex']]])
-  }
-  
-}
-
-# library('biomaRt')
-# mart <- useDataset("hsapiens_gene_ensembl", useMart("ensembl"))
-# data_expr_gene_symbol <- list()
-
-gene_annotation <- read.delim("~/marenostrum/MN4/bsc83/Projects/GTEx_v8/Jose/04_Smoking/github/analysis/data/public/gencode.v26.GRCh38.genes.bed", header=F)[,c(6,7)]
-colnames(gene_annotation) <- c("gene", "symbol")
-
-#These were genes duplicated, I changed their names to their correct one
-gene_annotation$symbol[gene_annotation$gene=="ENSG00000253972.5"] <- "MAL2-AS1" #I found this a posteriori
-gene_annotation$symbol[gene_annotation$gene=="ENSG00000283992.1"] <- "SLURP2" #Insted of LYNX1
-gene_annotation$symbol[gene_annotation$gene=="ENSG00000235271.5"] <- "GC22P027299"
-gene_annotation$symbol[gene_annotation$gene=="ENSG00000229694.6"] <- "C9orf73"
-gene_annotation$symbol[gene_annotation$gene=="ENSG00000228741.2"] <- "GC13P024553" 
-
-for(tissue in tissues){ 
-  print(tissue)
-  
-  data_expr_gene_symbol[[tissue]][['Age']] <- gene_annotation$symbol[gene_annotation$gene %in% data_expr[[tissue]][['Age']]]
-  if(length(data_expr[[tissue]][['Ancestry']])>0){
-  data_expr_gene_symbol[[tissue]][['Ancestry']] <- gene_annotation$symbol[gene_annotation$gene %in% data_expr[[tissue]][['Ancestry']]]
-  }
-  if(file.exists(paste0(project_path, "Tissues/",tissue, "/DVP_Sex.rds"))){
-    data_expr_gene_symbol[[tissue]][['Sex']] <- gene_annotation$symbol[gene_annotation$gene %in% data_expr[[tissue]][['Sex']]]
-  }
-  
-}
-
-overlap <- matrix(nrow = length(tissues), ncol=3, dimnames = list(tissues, names))
-for(tissue in tissues){ 
-  print(tissue)
-  
-  overlap[tissue, "Age"] <- sum(data_meth_genes[[tissue]][['Age']] %in% data_expr_gene_symbol[[tissue]][['Age']])
-  overlap[tissue, "Ancestry"] <-  sum(data_meth_genes[[tissue]][['Ancestry']] %in% data_expr_gene_symbol[[tissue]][['Ancestry']])
-  if(file.exists(paste0(project_path, "Tissues/",tissue, "/DVG_Sex.rds"))){
-    overlap[tissue, "Sex"] <-  sum(data_meth_genes[[tissue]][['Sex']] %in% data_expr_gene_symbol[[tissue]][['Sex']])
-  }
-  
-}
-
-create_heatmap <- function(data, tissue_info, size=12){ #It takes as input the whole data frame, the whole information on tissues, the subset of tissues and  diseases to be plotted, and the font size
-  #data, tissue_info, tissues_plot = rownames(data), diseases_plot = colnames(data), size=12
-  without_NA <- replace(data, is.na(data), "")
-  
-  tissues_cols <- tissue_info[, 3]
-  names(tissues_cols) <- tissue_info[, 1]
-  tissues_cols <- tissues_cols[tissues]
-  
-  Heatmap(data,
-          heatmap_legend_param = list(legend_height = unit(5, "cm"),
-                                      grid_width = unit(1, "cm"),
-                                      labels_gp=gpar(fontsize=size),
-                                      title_gp=gpar(fontsize=size, fontface=2)),
-          col= colorRamp2( c(0,1,max(data[!is.na(data)])/4,max(data[!is.na(data)])/2,max(data[!is.na(data)])),
-                           brewer.pal(8, "BuPu")[c(1,2,4,5,7)]),
-          na_col = "white",
-          cluster_rows = F,
-          cluster_columns = F,
-          name = "#DVPs",
-          row_names_side = "left",
-          column_names_side = "top",
-          column_names_rot =  60,
-          column_names_gp = gpar(fontsize = size),
-          column_names_max_height= unit(9, "cm"),
-          row_names_gp = gpar(fontsize = size),
-          cell_fun = function(j, i, x, y, width, height, fill) {
-            grid.text(my_pretty_num_function(without_NA[i, j]), x, y, gp = gpar(fontsize = size))}
-          
-  )
-}
-overlap <- overlap[,c("Ancestry", "Sex", "Age")]
-rownames(overlap) <- tissue_info$name[match(rownames(overlap), tissue_info$tissue_ID)]
-pdf(paste0(project_path, "Plots/Heatmap_DVGs_DMG.pdf"), height = 4.5, width = 6.5)
-create_heatmap(overlap, tissue_info, size=12)
-dev.off()
-
-
- #### enrichment overlap? 

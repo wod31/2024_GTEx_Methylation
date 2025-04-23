@@ -1,3 +1,8 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Script to get the location of the DVPs in chromatin regions (enrichment)
+# @software version: R=4.2.2
 
 # library(minfi)
 # library(lumi)
