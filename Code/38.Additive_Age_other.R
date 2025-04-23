@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Get additive effects of Age with other demographic traits and perform plots
+# @software version: R=4.2.2
+
 ##########################################
 #### Additive effects ####################
 ##########################################
@@ -160,18 +166,6 @@ ht <- Heatmap(apply(number_of_DEGs, 2, function(x) x/sum(x)),
 
 
 
-# dir.create("~/GTEx_v8/Raquel/Draft/Analysis/expression/additive_effects_are_widespread_and_tissue_specific/figures/", recursive = T)
-# pdf("~/GTEx_v8/Raquel/Draft/Analysis/expression/additive_effects_are_widespread_and_tissue_specific/figures/Figure_3D.number_of_genes_DE_with_2_traits.pdf",
-#     width = 4.5, height = 5.5)
-# draw(ht)
-# dev.off()
-# 
-# rownames(number_of_DEGs) <- tissue_info$tissue_ID
-# dir.create("~/GTEx_v8/Raquel/Draft/Analysis/expression/additive_effects_are_widespread_and_tissue_specific/supplementary_tables/", recursive = T)
-# write.table(number_of_DEGs,
-#             "~/GTEx_v8/Raquel/Draft/Analysis/expression/additive_effects_are_widespread_and_tissue_specific/supplementary_tables/number_of_DEGs_2_traits.tab",
-#             col.names = T, row.names = T, 
-#             quote = F, sep = "\t")
 
 
 # Fisher's exact test to test if there are more DEGs with 2 traits than expected ----

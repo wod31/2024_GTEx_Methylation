@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Plot numbers of correlated DMPs
+# @software version: R=4.2.2
+
 library(ComplexHeatmap)
 library(RColorBrewer)
 suppressPackageStartupMessages(library(circlize))
@@ -55,47 +61,6 @@ for(tissue in sex_tissues[c(2,3)]){
 to_plot_2 <- readRDS('~/marenostrum/Projects/GTEx_v8/Methylation/Data/correlations_to_plot_2.new.rds')
 to_plot_1 <- readRDS('~/marenostrum/Projects/GTEx_v8/Methylation/Data/correlations_to_plot_1.new.rds')
 
-### Read the correlations ####
-### read Correlations
-# get_corr <- function(tissue, trait){
-#   if(tissue %in% sex_tissues & trait == "SEX2"){
-#     NA
-#   }else{
-#     model <- readRDS(paste0(project_path, "Tissues/",tissue, "/",trait,'_Correlations_probes_genes_DEG_DMP.rds'))
-#     #rownames(model[[trait]][model[[trait]]$adj.P.Val<0.05,])
-#     model[model$p.adj<0.05,]
-#   }
-# }
-# DMPs_cor <- lapply(c('EURv1','SEX2','AGE','BMI'), function(trait) lapply(tissues, function(tissue) get_corr(tissue, trait)))
-# names(DMPs_cor) <- c("Ancestry", "Sex", "Age", "BMI")
-# for(trait in c("Ancestry", "Sex", "Age", "BMI")){names(DMPs_cor[[trait]]) <- tissues}
-# 
-# get_pairs <- function(tissue, trait){
-#   if(tissue %in% sex_tissues & trait == "SEX2"){
-#     NA
-#   }else{
-#     model <- readRDS(paste0(project_path, "Tissues/",tissue, "/",trait,'_Correlations_probes_genes_DEG_DMP.rds'))
-#     #rownames(model[[trait]][model[[trait]]$adj.P.Val<0.05,])
-#     model[!is.na(model$gene),]
-#   }
-# }
-# DMPs_DEGs <- lapply(c('EURv1','SEX2','AGE','BMI'), function(trait) lapply(tissues, function(tissue) get_pairs(tissue, trait)))
-# names(DMPs_DEGs) <- c("Ancestry", "Sex", "Age", "BMI")
-# for(trait in c("Ancestry", "Sex", "Age", "BMI")){names(DMPs_DEGs[[trait]]) <- tissues}
-# 
-# all_cor <- unlist(DMPs_cor, recursive = FALSE)
-# all_cor_df <- do.call("rbind", all_cor)
-# all_cor_df[,c('Trait','Tissue','Gene')] <- stringr::str_split_fixed(rownames(all_cor_df), '\\.', 3)
-# write.table(all_cor_df[,c(1:8)], '~/marenostrum/Projects/GTEx_v8/Methylation/Data/Correlations_all_traits_tissues.txt', sep = '\t', quote = F, 
-#             row.names = F, col.names = T)
-
-### all pairs
-# all_pairs <- unlist(DMPs_DEGs, recursive = FALSE)
-# all_pairs_df <- do.call("rbind", all_pairs)
-# all_pairs_df[,c('Trait','Tissue','Gene')] <- stringr::str_split_fixed(rownames(all_pairs_df), '\\.', 3)
-# write.table(unique(all_pairs_df$gene[all_pairs_df$Trait == 'Ancestry']), 
-#             '~/marenostrum/Projects/GTEx_v8/Methylation/Data/Correlations_ancestry_pairs.txt', sep = '\n', quote = F, 
-#             row.names = F, col.names = F)
 
 #% of DMPs correlated
 ### read Correlations
@@ -104,14 +69,12 @@ get_corr <- function(tissue, trait){
     NA
   }else{
     model <- readRDS(paste0(project_path, "Tissues/",tissue, "/",trait,'_Correlations_probes_genes_DEG_DMP.rds'))
-    #rownames(model[[trait]][model[[trait]]$adj.P.Val<0.05,])
     model
   }
 }
 DMPs_Res <- lapply(c('EURv1','SEX2','AGE','BMI'), function(trait) lapply(tissues, function(tissue) get_corr(tissue, trait)))
 names(DMPs_Res) <- c("Ancestry", "Sex", "Age", "BMI")
 for(trait in c("Ancestry", "Sex", "Age", "BMI")){names(DMPs_Res[[trait]]) <- tissues}
-# cor <- readRDS("tissues/ColonTransverse/Correlations.rds")
 option <- 1
 # option <- 3
 

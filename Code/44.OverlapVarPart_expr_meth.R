@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Explore overlap variance partition analysis between expression and DNAm
+# @software version: R=4.2.2
+
 #### overlap varpart methylation and expression ####
 ### read expression data ###
 library(variancePartition)

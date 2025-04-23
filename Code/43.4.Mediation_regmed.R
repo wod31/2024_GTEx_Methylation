@@ -1,4 +1,8 @@
 #!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Perform mediation analysis methylation, demographic traits and gene expression with regmed
+# @software version: R=4.2.2
 
 # Parsing
 library(optparse)

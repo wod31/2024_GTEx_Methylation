@@ -1,4 +1,9 @@
 #!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Plot mediation analysis methylation, demographic traits and gene expression 
+# @software version: R=4.2.2
+
 set.seed(1)
 
 # Libraries ----

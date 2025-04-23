@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Check if the H3K273me peaks different between males and females overlap with sex-DMPs
+# @software version: R=4.2.2
+
 #### merge dna methylation with differential peak calling
 
 #first_dir <- "/gpfs/projects/bsc83/"

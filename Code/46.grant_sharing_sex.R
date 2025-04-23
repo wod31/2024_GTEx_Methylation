@@ -1,3 +1,10 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Analyze sharing sex-DMPs with Grant et al., results and perform enrichments with chromhmm
+# @software version: R=4.2.2
+
+
 #### sharing grant et al. #####
 sharing <- readRDS('Data/Sharing_DMP.rds')
 shared_cpgs <- readRDS('Data/chromHMM_shared_9tissues.rds')

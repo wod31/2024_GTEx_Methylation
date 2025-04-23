@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Plot correlations, explore different threseholds of DMPs and other things
+# @software version: R=4.2.2
+
 library(ComplexHeatmap)
 library(RColorBrewer)
 suppressPackageStartupMessages(library(circlize))
