@@ -1,4 +1,8 @@
 #!/usr/bin/env Rscript
+# @Author: Jose Miguel Ramirez
+# @E-mail: winn95@gmail.com
+# @Description: Script to model differentially variable CpGs per tissue
+# @software version: R=4.2.2
 
 # Parsing
 library(optparse)

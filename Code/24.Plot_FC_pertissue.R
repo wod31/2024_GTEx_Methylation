@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Plot FC per tissue and demographic trait for supplementary + plot outliers
+# @software version: R=4.2.2
+
 #### plot FC per trait per tissue #####
 
 first_dir <- "marenostrum/"

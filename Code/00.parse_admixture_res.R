@@ -1,3 +1,10 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Parse Admixture annotation
+# @software version: R=4.2.2
+
+
 install.packages(c("fields","RColorBrewer","mapplots"))
 BiocManager::install("LEA")
 library(LEA)

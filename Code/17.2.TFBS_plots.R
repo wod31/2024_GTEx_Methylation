@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 # @Author: Jose Miguel Ramirez
 # @E-mail: jose.ramirez1@bsc.es
-# @Description: Enrichment on TFBS for differentially methylated positions/loci
+# @Description: Plot Enrichment on TFBS for differentially methylated positions/loci
 # @software version: R=4.2.2
 
 library(ComplexHeatmap)

@@ -1,3 +1,10 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Get CpGs with extreme methylation values
+# @software version: R=4.2.2
+
+
 ##### Check enrichment in xtreme regions ####
 ### first get extreme regions per tissue ####
 first_dir <- "/gpfs/projects/bsc83/"

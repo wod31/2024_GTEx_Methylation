@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 # @Author: Jose Miguel Ramirez
 # @E-mail: jose.ramirez1@bsc.es
-# @Description: Code to plot expression downsampling
+# @Description: Code to plot DNAm downsampling
 # @software version: R=4.2.2
 
 
@@ -40,31 +40,3 @@ Heatmap(medians, col = brewer.pal(9,"BuPu")[c(1,4:7)],
         row_names_side = "left",)
 dev.off()
 #Sort tissues
-
-
-
-# #To main:
-# library(reshape2)
-# library(ggplot2)
-# 
-# df <- melt(medians)
-# df$Var2 <- as.factor(df$Var2)
-# cols <- tissue_info$color
-# names(cols) <- tissue_info$Name
-# 
-# g <- ggplot(df, aes(Var2, value, col=Var1)) + geom_point() +
-#   scale_color_manual(values=cols) +
-#   geom_line(aes(group = Var1)) + theme_bw() +
-#   theme(legend.title = element_blank(),
-#         axis.text = element_text(colour="black", size=13),
-#         legend.text = element_text(colour="black", size=13),
-#         axis.title = element_text(size=16),
-#         # legend.spacing.y = unit(-0.05, "cm"),
-#         panel.grid.major = element_blank(),
-#         panel.grid.minor = element_blank(),
-#         panel.border = element_rect(colour = "black", linewidth=1)) +
-#   ylab("Number of DEGs") + xlab("Number of samples")
-# 
-# pdf("../figures/figures/figure_s1/downsampling_main.pdf", height = 2.5, width = 10.2)
-# g
-# dev.off()

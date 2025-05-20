@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Create summary plots for the binding of TFBS on DMPs
+# @software version: R=4.2.2
+
 library(ggplot2)
 library(dplyr)
 library(tidyr)
@@ -108,14 +114,4 @@ for(tissue in tissues){
   
 }
 
-
-# ### plot
-# pdf('~/marenostrum/Projects/GTEx_v8/Methylation/Plots/Enrichment_female_vs_male_Lung_bar.pdf', width = 5, height = 8)
-# ggplot(results_chipatlas_f) + geom_bar(aes(x=log2(meanFE+0.01),y=reorder(Antigen, -meanFE), fill=meanFDR), width = 0.6, stat = 'identity') +
-#   theme_classic() + xlab("log2(meanFE)") + ylab("") +
-#   scale_fill_gradient2( high = "#B6D274" ,low="#386641", name='meanFDR', midpoint = 0)+
-#   theme( axis.text.x = element_text(colour="black", size=13),
-#          axis.text.y = element_text(colour="black", size=13),
-#          axis.title.x = element_text(size=16)) 
-# dev.off()
 

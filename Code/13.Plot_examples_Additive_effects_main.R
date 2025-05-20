@@ -1,4 +1,9 @@
 #!/usr/bin/env Rscript
+# @Author: Winona Oliveros; Adapted from Raquel Garcia
+# @E-mail: winona.oliveros@bsc.es
+# @Description: Plot examples of additive effects
+# @software version: R=4.2.2
+
 set.seed(1)
 
 # Libraries ----
@@ -70,7 +75,7 @@ for(tissue in sex_tissues[c(2,3)]){
 }
 
 
-# 1. Hier.part:expression ----
+# 1. Hier.part: ----
 # All genes expressed in tissue 
 hier.part.exprs <- lapply(tissues, function(tissue)
   readRDS(paste0("~/marenostrum/Projects/GTEx_v8/Methylation/Tissues/",tissue,"/","hier.part.5peers.continous.rds")))
@@ -82,7 +87,6 @@ get_DMPs <- function(tissue, trait){
     NA
   }else{
     model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_5_PEERs_continous.rds"))[[trait]]
-    #rownames(model[[trait]][model[[trait]]$adj.P.Val<0.05,])
     model
   }
 }
@@ -91,7 +95,7 @@ names(DMPs_Res) <- c("Ancestry", "Sex", "Age", "BMI")
 for(trait in c("Ancestry", "Sex", "Age", "BMI")){names(DMPs_Res[[trait]]) <- tissues}
 
 
-# Lists of DEGs ----
+# Lists of DMPs ----
 get_DMPs <- function(tissue, trait){
   if(tissue %in% sex_tissues & trait == "Sex"){
     NA
@@ -142,20 +146,11 @@ get.gene.data <- function(gene_name){
   # Gene TPM ----
   df <- cbind.data.frame(t(readRDS(paste0("~/marenostrum/Projects/GTEx_v8/Methylation/Tissues/", tissue, "/", "data.rds"))[gene,]))
   
-  # Gene residuals ----
-  #residuals <- readRDS(paste0("~/marenostrum/Projects/GTEx_v8/Methylation/Tissues/", tissue, "/", "methylation_residuals.continous.rds"))
-  
-  #identical(colnames(tpm), colnames(res))
-  
-  #df <- cbind.data.frame(t(tpm[gene,]))
-  colnames(df) <- "Beta"
+    colnames(df) <- "Beta"
   df$residuals<- readRDS(paste0("~/marenostrum/Projects/GTEx_v8/Methylation/Tissues/", tissue, "/", "methylation_residuals.continous.rds"))[gene,]
   df$Age_int <- sapply(rownames(df), function(i) metadata[[tissue]][metadata[[tissue]]$SUBJID==i,"AGE"])
   df$BMI_int <- sapply(rownames(df), function(i) metadata[[tissue]][metadata[[tissue]]$SUBJID==i,"BMI"])
-  #df$Age <- sapply(df$Age_int, function(i) ifelse(i<45, "[20-45)", "[45-70]"))
-  #df$Age <- factor(df$Age, 
-  #                 levels = c("[20-45)", "[45-70]"),
-  #                 order = T)
+
   df$Age <- sapply(df$Age_int, function(age) pseudo_categorize_age(age))
   df$Age <- factor(df$Age, 
                    levels = c("[20-30)",
@@ -187,13 +182,6 @@ get.gene.data <- function(gene_name){
 tissue <- "ColonTransverse"
 gene_name <- "cg14188106" 
 gene <- gene_name
-#sapply(traits, function(trait) gene %in% DMPs[[tissue]][[trait]])
-
-# # Gene TPM ----
-# tpm <- readRDS(paste0("~/marenostrum/Projects/GTEx_v8/Methylation/Tissues/", tissue, "/", "data.rds"))
-# 
-# # Gene residuals ----
-# residuals <- readRDS(paste0("~/marenostrum/Projects/GTEx_v8/Methylation/Tissues/", tissue, "/", "methylation_residuals.continous.rds"))
 
 # get gene data ----
 data <- get.gene.data(gene_name)
@@ -408,90 +396,7 @@ p3 <- ggplot(d, aes(x=1, y=value, fill = variable)) +
         strip.background = element_rect(fill="#B3B3B3"),
         legend.position = "none") 
 p3
-# pdf("~/GTEx_v8/Raquel/Draft/Analysis/Expression.OverlapBetweenTraits/figures/04.Sex_BMI.AdiposeSubcutaneous.EGFL6.option1.Expression_residuals.pdf",
-#     width = 3, height = 8)
+
 ggarrange(p1, p2, p3, nrow = 3, heights =  c(4,4,1))
 #dev.off()
-
-# option 2 ----
-# cols <- c(traits_cols["Age"], traits_cols["Age"],traits_cols["Age"],traits_cols["Age"],traits_cols["Age"])
-# names(cols) <- c("[20-30)",
-#                  "[30-40)",
-#                  "[40-50)",
-#                  "[50-60)",
-#                  "[60-70]")
-# p4 <- ggplot(data = data,
-#              aes(x = Age,
-#                  y = residuals,
-#                  fill = Age),
-# ) +
-#   geom_violin(col = "black") +
-#   geom_boxplot(col = "black",
-#                fill = "white",
-#                outlier.shape = NA,
-#                notch = T,
-#                width = 0.25) +
-#   geom_jitter(col = "black", 
-#               alpha = 0.1,
-#               size = 0.8) +
-#   xlab("") +
-#   ylab("Expression residuals") +
-#   scale_fill_manual(values = cols) +
-#   facet_grid(~Ancestry) +
-#   stat_summary(fun.data = get_box_stats, geom = "text",
-#                hjust = 0.5, vjust = 0.9, size = 2) +
-#   labs(title=gene_name) +
-#   theme(panel.background = element_blank(),
-#         panel.grid.major = element_blank(), 
-#         panel.grid.minor = element_blank(),
-#         panel.border = element_rect(colour = "black", fill=NA, size=0.5),
-#         axis.ticks = element_line(size = 0.1),
-#         axis.text.x = element_text(size = 10),
-#         axis.title.y = ggtext::element_markdown(size=10),
-#         axis.title = element_text(size = 10),
-#         plot.title = element_text(hjust = 0.5,
-#                                   size = 10),
-#         strip.background = element_rect(fill="#CC79A7"),
-#         legend.position = "none") 
-# 
-# cols <- c(traits_cols["BMI"], traits_cols["BMI"], traits_cols["BMI"])
-# names(cols) <- c("Normal", "Overweight", "Obese")
-# p5 <- ggplot(data = data,
-#              aes(x = BMI,
-#                  y = residuals,
-#                  fill = BMI),
-# ) +
-#   geom_violin(col = "black") +
-#   geom_boxplot(col = "black",
-#                fill = "white",
-#                outlier.shape = NA,
-#                notch = T,
-#                width = 0.25) +
-#   geom_jitter(col = "black", 
-#               alpha = 0.1,
-#               size = 0.8) +
-#   xlab("") +
-#   ylab("Expression residuals") +
-#   scale_fill_manual(values = cols) +
-#   facet_grid(~Sex) +
-#   stat_summary(fun.data = get_box_stats, geom = "text",
-#                hjust = 0.5, vjust = 0.9, size = 2) +
-#   labs(title=gene_name) +
-#   theme(panel.background = element_blank(),
-#         panel.grid.major = element_blank(), 
-#         panel.grid.minor = element_blank(),
-#         panel.border = element_rect(colour = "black", fill=NA, size=0.5),
-#         axis.ticks = element_line(size = 0.1),
-#         axis.text.x = element_text(size = 10),
-#         axis.title.y = ggtext::element_markdown(size=10),
-#         axis.title = element_text(size = 10),
-#         plot.title = element_text(hjust = 0.5,
-#                                   size = 10),
-#         strip.background = element_rect(fill="#009E73"),
-#         legend.position = "none") 
-# 
-# pdf("~/GTEx_v8/Raquel/Draft/Analysis/Expression.OverlapBetweenTraits/figures/04.Sex_BMI.AdiposeSubcutaneous.EGFL6.option2.Expression_residuals.pdf",
-#     width = 5, height = 6)
-# ggarrange(p4, p5, p3, nrow = 3, heights =  c(4,4,1))
-# dev.off()
 

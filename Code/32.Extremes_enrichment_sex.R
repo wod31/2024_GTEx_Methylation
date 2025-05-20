@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Check if sex-DMPs are enriched in extremely methylated positions
+# @software version: R=4.2.2
+
 #### Analyze enrichment extreme cpgs ####
 ### plot enrichments sex in female/male chromhmmm ####
 #### Load results and data

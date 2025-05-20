@@ -1,4 +1,8 @@
 #!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Model if DVPs are genetically driven bu mQTLs (cis-driven)
+# @software version: R=4.2.2
 
 #Loading libraries
 library(optparse)
@@ -93,9 +97,7 @@ print("Reading mQTL data")
 # mCpGs and independent mQTLs ----
 inpath_mqtls <- "/gpfs/scratch/bsc83/MN4/bsc83/bsc83535/GTEx/v9/mQTLs/"
 mgene_data <- as.data.frame(data.table::fread(paste0(inpath_mqtls,tissue,".mQTLs.conditional.txt.gz")))
-# mgene_data <- mgene_data[mgene_data$V7<0.05 & abs(mgene_data$V3)<250000,] #Distance from mQTL to CpG
 mgene_data <- mgene_data[mgene_data$V7<0.05 & abs(mgene_data$V3)<distance,] #Distance from mQTL to CpG
-# mCpGs <- unique(gsub(':.*','',mgene_data$V1[mgene_data$V7<0.05 & abs(mgene_data$V3)<250000]))
 mCpGs <- unique(gsub(':.*','',mgene_data$V1[mgene_data$V7<0.05 & abs(mgene_data$V3)<distance]))
 
 mgene_data_extra <- as.data.frame(data.table::fread(paste0(inpath_mqtls,tissue,".regular.perm.fdr.txt")))

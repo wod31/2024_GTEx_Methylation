@@ -1,4 +1,9 @@
 #!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Plot results of cis-driven DVPs
+# @software version: R=4.2.2
+
 set.seed(1)
 
 # Libraries ----
@@ -35,14 +40,10 @@ input <- "residuals"
 correlation <- "0.8"
 
 for(tissue in tissues){ #For me this is the same in DMP and DVP
-  # if(!file.exists(paste0(inpath, tissue, '/Testing_', model, '_', input, 'Ancestry.Classification_summary.rds'))){print(tissue)}
   if(!file.exists(paste0(inpath, tissue, '/Testing_', model, '_', input, "_", correlation, '_Ancestry.Classification_summary.qval005.rds'))){print(tissue)}
-  # if(!file.exists(paste0(inpath, tissue, '/Testing_', model, '_', input, "_", correlation, "_", distance, '_Ancestry.Classification_summary.rds'))){print(tissue)}
 }
 d <- lapply(tissues, function(tissue)
-  # readRDS(paste0(inpath, tissue, '/Testing_', model, '_', input, "_", correlation, "_", distance, '_Ancestry.Classification_summary.rds')))
   readRDS(paste0(inpath, tissue, '/Testing_', model, '_', input, "_", correlation, '_Ancestry.Classification_summary.qval005.rds')))
-  # readRDS(paste0(inpath, tissue, '/Testing_', model, '_', input, 'Ancestry.Classification_summary.rds')))
 names(d) <- tissues
 
 # Create dataframe --
@@ -52,8 +53,7 @@ data <- do.call(rbind.data.frame,d)
 
 # DMP/DVP classified as either cis-driven or not cis-driven --
 results <-  lapply(tissues, function(tissue) 
-  # readRDS(paste0(inpath, tissue, '/Testing_', model, '_', input, "_", correlation, "_", distance, '_Ancestry.Classified.rds')))
-  # readRDS(paste0(inpath, tissue, '/Testing_', model, '_', input, "_", 'Ancestry.Classified.rds')))
+
 readRDS(paste0(inpath, tissue, '/Testing_', model, '_', input, "_", correlation, '_Ancestry.Classified.qval005.rds')))
 names(results) <- tissues
 

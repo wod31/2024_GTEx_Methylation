@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Analyze chromatin regions that are specific of each population
+# @software version: R=4.2.2
+
 ###### Analysis pop specific regions #####
 
 #### read catalogue info####

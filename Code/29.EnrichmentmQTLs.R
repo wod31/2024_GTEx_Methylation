@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Perform enrichment of ancestry DMPs on mQTLs
+# @software version: R=4.2.2
+
 # Tissues ---
 first_dir <- "/gpfs/projects/bsc83/"
 

@@ -1,4 +1,9 @@
 #!/usr/bin/env Rscript
+# @Author: Winona Oliveros; Adapted from Raquel Garcia
+# @E-mail: winona.oliveros@bsc.es
+# @Description: Perform main plots of the Additive analyses
+# @software version: R=4.2.2
+
 
 # libraries ----
 library(ComplexHeatmap)
@@ -47,16 +52,12 @@ for(tissue in sex_tissues[c(2,3)]){
   metadata[[tissue]] <- metadata[[tissue]][, colnames(metadata$MuscleSkeletal)[c(1:8,10:21)]]
 }
 
-# Differential expression analyses: results tables ----
-# for(tissue in tissues){
-#   if(!file.exists(paste0("~/GTEx_v8/Raquel/03_DEA/01.DEA/Tissues/",tissue,"/", tissue,".voom_limma.covariates_and_traits.results.rds"))){print(tissue)}
-# }
+### get DMPs 
 get_DMPs <- function(tissue, trait){
   if(tissue %in% sex_tissues & trait == "SEX2"){
     NA
   }else{
     model <- readRDS(paste0(project_path, "Tissues/",tissue, "/DML_results_5_PEERs_continous.rds"))[[trait]]
-    #rownames(model[[trait]][model[[trait]]$adj.P.Val<0.05,])
     model
   }
 }

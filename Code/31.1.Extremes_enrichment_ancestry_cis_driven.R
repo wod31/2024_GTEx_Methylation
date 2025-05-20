@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Check if the ancestry-cis-driven DMPs are enriched in extremely methylated positions
+# @software version: R=4.2.2
+
 ### extremes enrichment cis-driven ####
 #### Analyze enrichment extreme cpgs ####
 ### plot enrichments sex in female/male chromhmmm ####

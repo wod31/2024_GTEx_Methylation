@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: compare expression levels of genes with DMPs in TSS
+# @software version: R=4.2.2
+
 ### compare expression levels of genes with DMPs in TSS ####
 ############# Plot expression of genes ########
 #!/usr/bin/env Rscript

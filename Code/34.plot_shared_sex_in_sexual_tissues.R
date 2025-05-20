@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: plot methylation levels of sex-shared DMPs in sex tissues
+# @software version: R=4.2.2
+
 ### plot methylation levels shared in sex tissues
 first_dir <- "/gpfs/"
 setwd(paste0(first_dir, "/projects/bsc83/Projects/GTEx_v8/Methylation/"))# Paths ####

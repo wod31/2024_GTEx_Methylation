@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Analyze chromHMM from Male and female samples
+# @software version: R=4.2.2
+
 #### plot enrichments sex in female/male chromhmmm ####
 #### Load results and data
 annotation <- read.csv("marenostrum_scratch///GTEx/v9/Oliva/GPL21145_MethylationEPIC_15073387_v-1-0_processed.csv")

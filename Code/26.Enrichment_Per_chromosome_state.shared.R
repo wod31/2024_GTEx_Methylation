@@ -1,3 +1,8 @@
+#!/usr/bin/env Rscript
+# @Author: Winona Oliveros Diez
+# @E-mail: winn95@gmail.com
+# @Description: Perform functional enrichment on DMPs per chromatin region; shared positions
+# @software version: R=4.2.2
 
 # library(minfi)
 # library(lumi)
